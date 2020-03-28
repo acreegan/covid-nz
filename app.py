@@ -13,7 +13,12 @@ df = pd.read_csv('https://data.humdata.org/hxlproxy/data/download/time_series_co
 df = df[df['Country/Region']=='New Zealand']
 df.Date = pd.to_datetime(df.Date)
 
-app.layout = html.Div([
+app.layout = html.Div(children =[
+
+    html.H1(children="There are %s confirmed cases of Covid19 in New Zealand vs Time" % df.Value.iloc[0], style={
+        'textAlign': 'center'
+    }),
+
     dcc.Graph(
         id='covid_graph',
         figure={
@@ -34,7 +39,7 @@ app.layout = html.Div([
             'layout': dict(
                 xaxis={'title': 'Time'},
                 yaxis={'title': 'Confirmed Cases'},
-                margin={'l': 40, 'b': 40, 't': 30, 'r': 10},
+                margin={'l': 100, 'b': 40, 't': 30, 'r': 100},
                 legend={'x': 0, 'y': 1},
                 hovermode='closest',
                 title="Confirmed Cases of Covid19 in New Zealand"
