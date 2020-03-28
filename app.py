@@ -28,7 +28,7 @@ df.Date = pd.to_datetime(df.Date)
 myhtml = urlopen("https://www.health.govt.nz/our-work/diseases-and-conditions/covid-19-novel-coronavirus/covid-19-current-situation/covid-19-current-cases").read().decode('utf-8')
 soup = BeautifulSoup(myhtml,'html.parser')
 if soup.find("table", class_="table-style-two").find_all("td")[0].string == 'Number of confirmed cases in New Zealand':
-    b = soup.find("table", class_="table-style-two").find_all("td")[1].string
+    b = soup.find("table", class_="table-style-two").find_all("td")[7].string
 
 d = soup.find("table", class_="table-style-two").find("caption").string
 time = datetime.strptime(d,"As at %I.%M %p, %d %B %Y")
