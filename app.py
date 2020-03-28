@@ -15,7 +15,7 @@ df.Date = pd.to_datetime(df.Date)
 
 app.layout = html.Div(children =[
 
-    html.H1(children="There are %s confirmed cases of Covid19 in New Zealand vs Time" % df.Value.iloc[0], style={
+    html.H1(children="There are %s confirmed cases of Covid19 in New Zealand" % df.Value.iloc[0], style={
         'textAlign': 'center'
     }),
 
@@ -42,7 +42,7 @@ app.layout = html.Div(children =[
                 margin={'l': 100, 'b': 40, 't': 30, 'r': 100},
                 legend={'x': 0, 'y': 1},
                 hovermode='closest',
-                title="Confirmed Cases of Covid19 in New Zealand"
+                title="Confirmed Cases of Covid19 in New Zealand vs Time"
             )
         }
     )
