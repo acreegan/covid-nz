@@ -63,7 +63,7 @@ def createLayout():
                     margin={'l': 100, 'b': 100, 't': 30, 'r': 100},
                     legend={'x': 0, 'y': 1},
                     hovermode='closest',
-                    title="Confirmed cases of COVID-9 in New Zealand over time"
+                    title="Confirmed cases of COVID-19 in New Zealand over time"
                 )
             }
         ),
