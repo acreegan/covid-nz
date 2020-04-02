@@ -6,6 +6,9 @@ from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from datetime import datetime
 import numpy as np
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -21,8 +24,11 @@ def getData():
     # Get Johns Hopkins Data
     try:
         df = pd.read_csv(johnsURL)
-        df = pd.melt(df.loc[df["Country/Region"]=="New Zealand"],"Country/Region",df.columns[4:],"Date","Value")
-        df.Date = pd.to_datetime(df.Date)
+        df = df.T
+        df.columns = df.loc["Country/Region"].values
+        df = df.drop(df.index[0:4])
+        df = df.groupby(df.columns,axis=1).sum()
+        df.index = pd.to_datetime(df.index)
     except Exception as e:
         print("Error getting data from Johns Hopkins Github:", e)
 
@@ -34,14 +40,14 @@ def getData():
             numCases = np.int64(soup.find("table", class_="table-style-two").find_all("td")[7].string)
             dateString = soup.find("p", class_="page_updated").find("span", class_="date").string
             mohDate = pd.to_datetime(datetime.strptime(dateString, "%d %B %Y").replace(hour=0, minute=0, second=0, microsecond=0))
-            if mohDate>df["Date"].iloc[-1]:
-                latest = pd.DataFrame({"Country/Region": "New Zealand", "Date": mohDate, "Value": numCases, }, index=[0])
+            if mohDate>df.index[-1]:
+                latest = pd.DataFrame(columns=df.columns, index=[mohDate])
+                latest["New Zealand"].iloc[-1] = numCases
                 df = pd.concat([df, latest])
     except Exception as e:
         print("Error geting data from MOH website:", e)
 
     return df
-
 
 dataSourceText = "Data sources: [Johns Hopkins](https://github.com/CSSEGISandData/COVID-19), " \
                  "[NZ Ministry of Health](https://www.health.govt.nz/our-work/diseases-and-conditions/" \
@@ -53,21 +59,25 @@ def createLayout():
 
     return html.Div(children=[
 
-        html.H1(children="As of %s there are %s confirmed cases of COVID-19 in New Zealand" %
-                         (df["Date"].iloc[-1].strftime("%d %B %Y"),df.Value.iloc[-1]),
+        html.H1(children="As of %s there are %d confirmed cases of COVID-19 in New Zealand" %
+                         (df.index[-1].strftime("%d %B %Y"),df["New Zealand"].iloc[-1]),
                 style={'textAlign': 'center'}),
 
         dcc.Graph(
             id='covid_graph',
             figure={
-                'data': [dict(
-                    x=df['Date'],
-                    y=df['Value'],)],
+                'data': [
+                    dict(
+                        x=df.index,
+                        y=df[i],
+                        name=i
+                    ) for i in df[["New Zealand"]].columns #To view more countries, simply add more columns to the list
+                ],
                 'layout': dict(
                     xaxis={'title': 'Time'},
                     yaxis={'title': 'Confirmed cases'},
                     margin={'l': 100, 'b': 100, 't': 30, 'r': 100},
-                    legend={'x': 0, 'y': 1},
+                    # legend={'x': 0, 'y': 1},
                     hovermode='closest',
                     title="Confirmed cases of COVID-19 in New Zealand over time"
                 )
