@@ -1,6 +1,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+from dash.dependencies import Input, Output
 import pandas as pd
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
@@ -19,6 +20,8 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.title = "COVID-19 Cases NZ"
 
 server = app.server
+
+df = pd.DataFrame()
 
 def getData():
     # Get Johns Hopkins Data
@@ -54,7 +57,10 @@ dataSourceText = "Data sources: [Johns Hopkins](https://github.com/CSSEGISandDat
                  "covid-19-novel-coronavirus/covid-19-current-situation/covid-19-current-cases)"
 
 
+
+
 def createLayout():
+    global df
     df = getData()
 
     return html.Div(children=[
@@ -64,14 +70,39 @@ def createLayout():
                 style={'textAlign': 'center'}),
 
         dcc.Graph(
-            id='covid_graph',
-            figure={
+            id='covid_graph'
+        ),
+
+        dcc.Checklist(
+            id="show_all_checkbox",
+            options=[
+                {"label":"Show All Countries", "value":"All"}
+            ]
+        ),
+
+        dcc.Markdown(children=dataSourceText, style={"textAlign":"center"})
+    ])
+
+
+app.layout = createLayout
+
+@app.callback(
+    Output("covid_graph","figure"),
+    [Input("show_all_checkbox","value")]
+)
+def update_graph(value):
+    global df
+    myList = ["New Zealand"]
+    if value is not None and len(value)>0 and value[0] == "All":
+        myList = df.columns.values
+
+    return {
                 'data': [
                     dict(
                         x=df.index,
                         y=df[i],
                         name=i
-                    ) for i in df[["New Zealand"]].columns #To view more countries, simply add more columns to the list
+                    ) for i in df[myList].columns #To view more countries, simply add more columns to the list
                 ],
                 'layout': dict(
                     xaxis={'title': 'Time'},
@@ -82,13 +113,6 @@ def createLayout():
                     title="Confirmed cases of COVID-19 in New Zealand over time"
                 )
             }
-        ),
-
-        dcc.Markdown(children=dataSourceText, style={"textAlign":"center"})
-    ])
-
-
-app.layout = createLayout
 
 if __name__ == '__main__':
     app.run_server(debug=True)
