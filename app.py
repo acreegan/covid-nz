@@ -32,9 +32,8 @@ def getData():
         soup = BeautifulSoup(mohHTML,'html.parser')
         if soup.find("table", class_="table-style-two").find_all("td")[6].string == 'Number of confirmed and probable cases':
             numCases = np.int64(soup.find("table", class_="table-style-two").find_all("td")[7].string)
-            dateString = soup.find("table", class_="table-style-two").find("caption").string
-            mohDate = pd.to_datetime(datetime.strptime(dateString, "As at %I.%M %p, %d %B %Y").replace(hour=0, minute=0, second=0, microsecond=0)) #Old date format?
-            #mohDate = pd.to_datetime(datetime.strptime(dateString, "As at %I%p, %d %B %Y").replace(hour=0, minute=0, second=0, microsecond=0))
+            dateString = soup.find("p", class_="page_updated").find("span", class_="date").string
+            mohDate = pd.to_datetime(datetime.strptime(dateString, "%d %B %Y").replace(hour=0, minute=0, second=0, microsecond=0))
             if mohDate>df["Date"].iloc[-1]:
                 latest = pd.DataFrame({"Country/Region": "New Zealand", "Date": mohDate, "Value": numCases, }, index=[0])
                 df = pd.concat([df, latest])
