@@ -70,12 +70,20 @@ def createLayout():
             id='covid_graph'
         ),
 
-        dcc.Checklist(
-            id="show_all_checkbox",
-            options=[
-                {"label":"Show All Countries", "value":"All"}
-            ]
-        ),
+        html.Div([
+            dcc.Checklist(
+                id="show_all_checkbox",
+                options=[
+                    {"label": "Show All Countries", "value": "All"}
+                ]
+            ),
+
+            dcc.RadioItems(
+                id='yaxis-type',
+                options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
+                value='Linear',
+                labelStyle={'display': 'inline-block'}
+            )]),
 
         dcc.Markdown(children=dataSourceText, style={"textAlign":"center"}),
 
@@ -87,9 +95,9 @@ app.layout = createLayout
 
 @app.callback(
     Output("covid_graph","figure"),
-    [Input("show_all_checkbox","value"), Input("data_store", "children")]
+    [Input("show_all_checkbox","value"), Input("yaxis-type", "value"),Input("data_store", "children")]
 )
-def update_graph(value, children):
+def update_graph(value, yaxis_type, children):
     df = pd.read_json(children[0])
     countryList = ["New Zealand"]
     if value is not None and len(value)>0 and value[0] == "All":
@@ -105,7 +113,8 @@ def update_graph(value, children):
                 ],
                 'layout': dict(
                     xaxis={'title': 'Time'},
-                    yaxis={'title': 'Confirmed cases'},
+                    yaxis={'title': 'Confirmed cases',
+                           "type" : "linear" if yaxis_type == "Linear" else "log"},
                     margin={'l': 100, 'b': 100, 't': 30, 'r': 100},
                     hovermode='closest',
                     title="Confirmed cases of COVID-19 in New Zealand over time"
