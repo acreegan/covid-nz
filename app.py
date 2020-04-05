@@ -6,6 +6,9 @@ from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from datetime import datetime
 import numpy as np
+import locale
+locale.setlocale(locale.LC_ALL, 'en_US.UTF8')
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -30,8 +33,8 @@ def getData():
     try:
         mohHTML = urlopen(mohURL).read().decode('utf-8')
         soup = BeautifulSoup(mohHTML,'html.parser')
-        if soup.find("table", class_="table-style-two").find_all("td")[6].string == 'Number of confirmed and probable cases':
-            numCases = np.int64(soup.find("table", class_="table-style-two").find_all("td")[7].string)
+        if soup.find("table", class_="table-style-two").find_all("tr")[3].find("th").string == 'Number of confirmed and probable cases':
+            numCases = np.int64(locale.atoi(soup.find("table", class_="table-style-two").find_all("tr")[3].find_all("td")[0].string))
             dateString = soup.find("p", class_="page_updated").find("span", class_="date").string
             mohDate = pd.to_datetime(datetime.strptime(dateString, "%d %B %Y").replace(hour=0, minute=0, second=0, microsecond=0))
             if mohDate>df["Date"].iloc[-1]:
