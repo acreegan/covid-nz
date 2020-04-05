@@ -56,8 +56,8 @@ def createLayout():
 
     return html.Div(children=[
 
-        html.H1(children="As of %s there are %s confirmed cases of COVID-19 in New Zealand" %
-                         (df["Date"].iloc[-1].strftime("%d %B %Y"),df.Value.iloc[-1]),
+        html.H1(children=locale.format_string("As of %s there are %d confirmed cases of COVID-19 in New Zealand",
+                         (df["Date"].iloc[-1].strftime("%d %B %Y"),df.Value.iloc[-1]),grouping=True),
                 style={'textAlign': 'center'}),
 
         dcc.Graph(
