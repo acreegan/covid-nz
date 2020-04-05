@@ -64,8 +64,8 @@ def createLayout():
 
     return html.Div(children=[
 
-        html.H1(children="As of %s there are %d confirmed cases of COVID-19 in New Zealand" %
-                         (df.index[-1].strftime("%d %B %Y"),df["New Zealand"].iloc[-1]),
+        html.H1(children=locale.format_string("As of %s there are %d confirmed cases of COVID-19 in New Zealand",
+                         (df.index[-1].strftime("%d %B %Y"),df["New Zealand"].iloc[-1]),grouping=True),
                 style={'textAlign': 'center'}),
 
 
@@ -74,52 +74,41 @@ def createLayout():
                 dcc.Graph(
                     id='covid_graph',
                     style={
-                       "flex":"6 1 auto",
-                       "padding":"1rem"}
+                       "flex":"1 1 auto",
+                       "height":"50vh"}
                 ),
                 html.Div(
                     children=[
-                        html.Div(
-                            children=[
-                                html.Div(
-                                    children=[
-                                        html.Div([
-                                            html.Button("Select All",
-                                                        id="select_all",
-                                                        style={"display": "inline-block"}),
-                                            html.Button("Deselect All",
-                                                        id="deselect_all",
-                                                        style={"display": "inline-block"})
-                                                 ])
-                                    ],
-                                    style={"flex":"0 0 auto"}),
-                                dcc.Checklist(
-                                    id="countries_checklist",
-                                    options=[{
-                                        "label": i,
-                                        "value": i
-                                    } for i in df.columns],
-                                    style={
-                                        "flex": "1 0 0",
-                                        "overflow-y": "auto",
-                                        "-webkit-overflow-scrolling": "touch"
-                                    }
-                                )
-                            ],
-                            style={ "flex": "1 0 0",
-                                    "overflow-y": "auto",
-                                    "-webkit-overflow-scrolling": "touch"})
-
+                        html.Button(
+                            children="Hello",
+                            style={
+                                "flex":"0 0 auto"
+                            }
+                        ),
+                        dcc.Checklist(
+                            id="countries_checklist",
+                            options=[{
+                                "label": i,
+                                "value": i
+                            } for i in df.columns],
+                            style={
+                                "flex": "1 0 0",
+                                "overflow-y": "auto"
+                            }
+                        )
                     ],
                     id="right_column",
-                    style={"display": "flex",
-                           "flex-direction": "column",
-                           "padding": "1rem",}
+                    style={
+                        "display": "flex",
+                        "flex-direction": "column"
+                    }
                 )
             ],
             id="container",
-            style={"display": "flex",
-                   "padding": "1rem"}
+            style={
+                "display": "flex",
+                "flex-direction":"row"
+            }
         ),
 
 
@@ -172,3 +161,40 @@ def update_graph(value, children):
 if __name__ == '__main__':
     app.run_server(debug=True)
 
+
+
+
+
+# children=[
+#                         html.Div(
+#                             children=[
+#                                 html.Div(
+#                                     children=[
+#                                         html.Div([
+#                                             html.Button("Select All",
+#                                                         id="select_all",
+#                                                         style={"display": "inline-block"}),
+#                                             html.Button("Deselect All",
+#                                                         id="deselect_all",
+#                                                         style={"display": "inline-block"})
+#                                                  ])
+#                                     ],
+#                                     style={"flex":"0 0 auto"}),
+#                                 dcc.Checklist(
+#                                     id="countries_checklist",
+#                                     options=[{
+#                                         "label": i,
+#                                         "value": i
+#                                     } for i in df.columns],
+#                                     style={
+#                                         "flex": "1 0 0",
+#                                         "overflow-y": "auto",
+#                                         "-webkit-overflow-scrolling": "touch"
+#                                     }
+#                                 )
+#                             ],
+#                             style={ "flex": "1 0 0",
+#                                     "overflow-y": "auto",
+#                                     "-webkit-overflow-scrolling": "touch"})
+#
+#                     ],
