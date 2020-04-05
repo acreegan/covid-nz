@@ -79,11 +79,15 @@ def createLayout():
                 ),
                 html.Div(
                     children=[
-                        html.Button(
-                            children="Hello",
-                            style={
-                                "flex":"0 0 auto"
-                            }
+                        html.Div(
+                            children=[
+                                html.Button("Select All",
+                                            id="select_all",
+                                            style={"display": "inline-block"}),
+                                html.Button("Deselect All",
+                                            id="deselect_all",
+                                            style={"display": "inline-block"}),
+                            ]
                         ),
                         dcc.Checklist(
                             id="countries_checklist",
@@ -162,39 +166,3 @@ if __name__ == '__main__':
     app.run_server(debug=True)
 
 
-
-
-
-# children=[
-#                         html.Div(
-#                             children=[
-#                                 html.Div(
-#                                     children=[
-#                                         html.Div([
-#                                             html.Button("Select All",
-#                                                         id="select_all",
-#                                                         style={"display": "inline-block"}),
-#                                             html.Button("Deselect All",
-#                                                         id="deselect_all",
-#                                                         style={"display": "inline-block"})
-#                                                  ])
-#                                     ],
-#                                     style={"flex":"0 0 auto"}),
-#                                 dcc.Checklist(
-#                                     id="countries_checklist",
-#                                     options=[{
-#                                         "label": i,
-#                                         "value": i
-#                                     } for i in df.columns],
-#                                     style={
-#                                         "flex": "1 0 0",
-#                                         "overflow-y": "auto",
-#                                         "-webkit-overflow-scrolling": "touch"
-#                                     }
-#                                 )
-#                             ],
-#                             style={ "flex": "1 0 0",
-#                                     "overflow-y": "auto",
-#                                     "-webkit-overflow-scrolling": "touch"})
-#
-#                     ],
