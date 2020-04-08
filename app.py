@@ -1,7 +1,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, ClientsideFunction
 import pandas as pd
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
@@ -13,12 +13,15 @@ pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 johnsURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 mohURL = "https://www.health.govt.nz/our-work/diseases-and-conditions/covid-19-novel-coronavirus/covid-19-current-situation/covid-19-current-cases"
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+# app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(
+    __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"}]
+)
 app.title = "COVID-19 Cases NZ"
 
 server = app.server
@@ -62,75 +65,95 @@ dataSourceText = "Data sources: [Johns Hopkins](https://github.com/CSSEGISandDat
 def createLayout():
     df = getData()
 
-    return html.Div(children=[
+    return html.Div(
+        id="mainContainer",
+        style={"display": "flex", "flex-direction": "column"},
+        children=[
+            html.Div(id="output-clientside"),
 
-        html.H1(children=locale.format_string("As of %s there are %d confirmed cases of COVID-19 in New Zealand",
-                         (df.index[-1].strftime("%d %B %Y"),df["New Zealand"].iloc[-1]),grouping=True),
-                style={'textAlign': 'center'}),
+            html.Div(
+                [
+                    html.H3(
+                        children=locale.format_string(
+                            "As of %s there are %d confirmed cases of COVID-19 in New Zealand",
+                            (df.index[-1].strftime("%d %B %Y"), df["New Zealand"].iloc[-1]), grouping=True),
+                        className="twelve columns",
+                        style={"text-align": "center"}),
 
-
-        html.Div(
-            children=[
-                dcc.Graph(
-                    id='covid_graph',
-                    style={
-                       "flex":"1 1 auto",
-                       "height":"50vh"}
-                ),
-                html.Div(
-                    children=[
-                        html.Div(
-                            children=[
-                                html.Button("Select All",
-                                            id="select_all",
-                                            style={"display": "inline-block"}),
-                                html.Button("Deselect All",
-                                            id="deselect_all",
-                                            style={"display": "inline-block"}),
-                            ]
-                        ),
-                        dcc.Checklist(
-                            id="countries_checklist",
-                            options=[{
-                                "label": i,
-                                "value": i
-                            } for i in df.columns],
-                            style={
-                                "flex": "1 0 0",
-                                "overflow-y": "auto"
-                            }
-                        )
-                    ],
-                    id="right_column",
-                    style={
-                        "display": "flex",
-                        "flex-direction": "column"
-                    }
-                )
-            ],
-            id="container",
-            style={
-                "display": "flex",
-                "flex-direction":"row"
-            }
-        ),
+                ],
+                className="row flex-display"
+            ),
 
 
+            html.Div(
+                id="container",
+                className="row flex-display",
+                children=[
 
-        dcc.Checklist(
-            id="show_all_checkbox",
-            options=[
-                {"label": "Show All Countries", "value": "All"}
-            ]
-        ),
+                    html.Div(
+                        id='graph_container',
+                        className="eight columns",
+                        children=[
+                            html.Div(
+                                [dcc.Graph(id="covid_graph", config={"responsive":False})],
+                                className="pretty_container")
+                        ],
+                    ),
+                    html.Div(
+                        id="right_column",
+                        className="pretty_container four columns",
+                        children=[
+                            html.Div(
+                                children=[
+                                    html.Button("Select All",
+                                                id="select_all",
+                                                style={"display": "inline-block"}),
+                                    html.Button("Deselect All",
+                                                id="deselect_all",
+                                                style={"display": "inline-block"}),
+                                ]
+                            ),
+                            dcc.Checklist(
+                                id="countries_checklist",
+                                options=[{
+                                    "label": i,
+                                    "value": i
+                                } for i in df.columns]
+                                ,
+                                style={
+                                    "overflow-y": "auto",
+                                    "max-height": "300px"
+                                }
+                            )
+                        ]
+                    )
+                ]
+            ),
 
-        dcc.Markdown(children=dataSourceText, style={"textAlign":"center"}),
 
-        html.Div(id='data_store', style={'display': 'none'}, children=[df.to_json()])
+
+            dcc.Checklist(
+                id="show_all_checkbox",
+                options=[
+                    {"label": "Show All Countries", "value": "All"}
+                ]
+            ),
+
+            dcc.Markdown(children=dataSourceText, style={"textAlign":"center"}),
+
+            html.Div(id='data_store', style={'display': 'none'}, children=[df.to_json()])
         ])
 
 
 app.layout = createLayout
+
+# Create callbacks
+app.clientside_callback(
+    ClientsideFunction(namespace="clientside", function_name="resize"),
+    Output("output-clientside", "children"),
+    [Input("covid_graph", "figure")],
+)
+
 
 @app.callback(
     Output("covid_graph","figure"),
@@ -162,7 +185,9 @@ def update_graph(value, children):
 
 
 
+
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    # app.run_server(debug=True)
+    app.run_server(debug=True, port=8085, host="192.168.1.64")
 
 
