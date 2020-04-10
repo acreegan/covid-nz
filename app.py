@@ -1,13 +1,14 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import pandas as pd
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from datetime import datetime
 import numpy as np
 import locale
+import time
 locale.setlocale(locale.LC_ALL, 'en_US.UTF8')
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
@@ -72,6 +73,7 @@ def createLayout():
             html.Div(id='data_store', style={'display': 'none'}, children=[df.to_json()]),
 
             html.Div(
+                id="header",
                 className="row flex-display",
                 # style={"margin-bottom": "25px"},
                 children = [
@@ -90,40 +92,55 @@ def createLayout():
                 style={"height":"75vh"},
                 children=[
                     html.Div(
-                        className="pretty_container eight columns",
+                        id="graph_container",
+                        className="pretty_container nine columns",
                         children=[
-                            dcc.Graph(id="covid_graph", className="graph")
+                            dcc.Graph(id="covid_graph", className="graph", config={"displayModeBar":False})
                         ]
                     ),
                     html.Div(
-                        className="pretty_container four columns",
+                        className="pretty_container three columns",
+                        style={
+                            "display":"flex",
+                            "flex-flow":"column",
+                            "min-height":"60vh"
+
+                        },
                         children=[
+                            html.P("Select Countries", className="control_label"),
                             html.Div(
-                                style={"display":"flex","justify-content":"center","align-items":"center", "flex-wrap":"wrap"},
+                                style={
+                                    "display":"flex",
+                                    "flex-flow":"row wrap",
+                                    "justify-content":"center",
+                                    "align-items":"center"
+                                },
                                 children=[
                                     html.Button("Select All",
                                                 id="select_all",
                                                 style={"flex":"1","margin":".5rem"}
                                                 ),
-                                    html.Button("Deselect All",
-                                                id="deselect_all",
+                                    html.Button("Select None",
+                                                id="select_none",
                                                 style={"flex":"1","margin":".5rem"}
                                                 ),
                                 ]
                             ),
-                            dcc.Checklist(
-                                id="countries_checklist",
+                            dcc.Dropdown(
+                                id="countries",
+                                style={
+                                    "flex":"1",
+                                    "overflow":"auto"
+                                },
                                 options=[{
                                     "label": i,
                                     "value": i
                                 } for i in df.columns]
                                 ,
-                                style={
-                                    "overflow-y": "auto",
-                                    "height": "80%",
-                                    "margin-top": "2rem"
-                                }
-                            )
+                                multi=True,
+                                className="dcc_control"
+                            ),
+
                         ]
                     ),
                 ]
@@ -140,23 +157,82 @@ def createLayout():
 
 app.layout = createLayout
 
+@app.callback(
+    Output("header","children"),
+    [Input("countries","value")],
+    [State("data_store","children")]
+)
+def update_header(value, children):
+    df = pd.read_json(children[0])
+
+    if value is None or len(value)==0:
+        return html.H3(
+            children="None Selected",
+            className="twelve columns",
+            style={"text-align": "center", "margin-top": "0"}
+        ),
+    else:
+        country = value[0]
+        return html.H3(
+                    children=locale.format_string(
+                        "As of %s, there have been %d cases in total of COVID-19 confirmed in %s",
+                        (df[country].dropna().index[-1].strftime("%d %B %Y"),
+                         df[country].dropna().iloc[-1],
+                         country),
+                        grouping=True),
+                    className="twelve columns",
+                    style={"text-align": "center", "margin-top":"0"}
+        ),
+
+
+@app.callback(
+    Output("countries","value"),
+    [Input("select_all","n_clicks"),
+     Input("select_none","n_clicks")],
+    [State("countries","options")]
+)
+def select_all(all_n_clicks,none_n_clicks, options):
+    ctx = dash.callback_context
+
+    if ctx.triggered[0]["value"] is None:
+        return ["New Zealand"]
+
+    else:
+        if ctx.triggered[0]["prop_id"] == "select_all.n_clicks":
+            return list(i.get("value") for i in options)
+        else :
+            return []
+
+
+
+@app.callback(
+    Output("graph_container","children"),
+    [Input("countries","value")],
+    [State("graph_container","children")]
+)
+def update_gc_children(f,c):
+    time.sleep(.01)
+    return c
 
 @app.callback(
     Output("covid_graph","figure"),
-    [ Input("data_store", "children")]
+    [Input("data_store", "children"),
+     Input("countries","value")]
 )
-def update_graph( children):
+def update_graph(children, value):
     df = pd.read_json(children[0])
-    countryList = ["New Zealand"]
-    # if value is not None and len(value)>0 and value[0] == "All":
-    #     countryList = df.columns.values
-
+    countryList=[]
+    if value is not None and len(value)>0 :
+        countryList = value
     return {
                 'data': [
                     dict(
                         x=df.index,
                         y=df[i],
-                        name=i
+                        name=i,
+                        text=list("" if j<df[i].index[-1] else i for j in df[i].index) if len(countryList)>1 else "",
+                        mode="lines+text",
+                        textposition="top left"
                     ) for i in df[countryList].columns
                 ],
                 'layout': dict(
@@ -165,7 +241,8 @@ def update_graph( children):
                            "type" : "linear"},
                     margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
                     hovermode='closest',
-                    title="Confirmed cases of COVID-19 in <br>New Zealand over time"
+                    title="Confirmed cases of COVID-19<br> over time",
+                    showlegend=False,
                 )
             }
 
