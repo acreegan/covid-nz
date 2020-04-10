@@ -107,6 +107,8 @@ def createLayout():
 
                         },
                         children=[
+
+
                             html.P("Select Countries", className="control_label"),
                             html.Div(
                                 style={
@@ -230,7 +232,7 @@ def update_graph(children, value):
                         x=df.index,
                         y=df[i],
                         name=i,
-                        text=list("" if j<df[i].index[-1] else i for j in df[i].index) if len(countryList)>1 else "",
+                        text=list("" if j<df[i].dropna().index[-1] else i for j in df[i].dropna().index) if len(countryList)>1 else "",
                         mode="lines+text",
                         textposition="top left"
                     ) for i in df[countryList].columns
