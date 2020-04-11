@@ -92,7 +92,7 @@ def createLayout():
                 children = [
                     html.H3(
                         children=locale.format_string(
-                            "As of %s there are %d confirmed cases of COVID-19 in New Zealand",
+                            "As of %s, there have been %d cases in total of COVID-19 confirmed in New Zealand",
                             (df.index[-1].strftime("%d %B %Y"), df["New Zealand"].iloc[-1]), grouping=True),
                         className="twelve columns",
                         style={"textAlign": "center", "marginTop":"0"}),
