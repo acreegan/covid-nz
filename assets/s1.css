@@ -36,64 +36,53 @@
 
 /* Grid
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-.container {
-  position: relative;
-  width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 20px;
-  box-sizing: border-box;
-}
-.column,
-.columns {
-  width: 100%;
-  float: left;
-  box-sizing: border-box;
-}
 
-.pretty_container_g {
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  margin: 10px;
-  padding: 15px;
-  position: relative;
-  box-shadow: 2px 2px 2px lightgrey;
-  height:350px
-}
 
 .graph{
- height: 300px;
  margin: 0 0;
  padding: 0 1px;}
 
+.main_row{
+    flex:1;
+    display:flex;
+    flex-flow:row wrap;
+}
+
+#mainContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.control_container{
+    height:90vh;
+}
+
+
 /* For devices larger than 400px */
 @media (min-width: 400px) {
-  .container {
-    width: 85%;
-    padding: 0;
-  }
+
 }
 
 /* For devices larger than 550px */
 @media (min-width: 550px) {
 
-.pretty_container_g {
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  margin: 10px;
-  padding: 15px;
-  position: relative;
-  box-shadow: 2px 2px 2px lightgrey;
-  height:100%
-}
+    .main_row{
+        flex:1;
+        display:flex;
+        flex-flow:row nowrap;
+        overflow:hidden;
+    }
 
-.graph{
-height: 100%;
-}
+    #mainContainer {
+      display: flex;
+      flex-direction: column;
+      height:96vh;
+    }
 
-  .container {
-    width: 80%;
-  }
+    .control_container{
+        height:unset
+    }
+
   .column,
   .columns {
     margin-left: 4%;
@@ -561,28 +550,7 @@ there.
 
 /* Larger than phablet (also point when grid becomes active), screen larger than 550px */
 @media (min-width: 550px) {
-  .one.column,
-  .one.columns {
-    width: 8%;
-  }
-  .two.columns {
-    width: 16.25%;
-  }
-  .three.columns {
-    width: 22%;
-  }
-  .four.columns {
-    width: calc(100% / 3);
-  }
-  .five.columns {
-    width: calc(100% * 5 / 12);
-  }
-  .six.columns {
-    width: 49.75%;
-  }
-  .seven.columns {
-    width: calc(100% * 7 / 12);
-  }
+
 }
 
 /* Larger than tablet, for screens smaller than 768px */
@@ -594,62 +562,7 @@ there.
     margin: 0 !important;
     margin-bottom: 25px !important;
   }
-  #individual_graph,
-  #count_graph,
-  #aggregate_graph {
-    position: static !important;
-  }
-  .container-display {
-    display: flex;
-  }
-  #wells,
-  #gas,
-  #oil {
-    margin-right: 10px;
-  }
 
-  #wells {
-    margin-left: 0px;
-  }
-  #water {
-    margin-right: 0px;
-  }
-  .mini_container {
-    margin-bottom: 25px !important;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    padding: 15px;
-    position: relative;
-    box-shadow: 2px 2px 2px lightgrey;
-  }
-  #plotly-image {
-    margin-bottom: 0px !important;
-    height: 45px !important;
-  }
-  #learn-more-button {
-    margin-top: 0px !important;
-    padding: 0 10px !important;
-    font-size: 12px !important;
-  }
-  #button {
-    display: flex;
-    justify-content: center;
-  }
-  #title {
-    margin-bottom: 10px;
-  }
-  h3 {
-    font-size: 2.5rem;
-  }
-  h5 {
-    font-size: 2rem;
-  }
-  h6 {
-    font-size: 1.25rem;
-  }
-  p {
-    font-size: 11px;
-  }
 }
 
 /* Larger than desktop */

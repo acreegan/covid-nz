@@ -82,41 +82,56 @@ def createLayout():
 
     return html.Div(
         id="mainContainer",
-        style={"display": "flex", "flexDirection": "column"},
+        className="mainContainer",
         children=[
             html.Div(id='data_store', style={'display': 'none'}, children=[df.to_json(),dfText.to_json()]),
 
             html.Div(
                 id="header",
-                className="row flex-display",
+                className="flex-display",
                 children = [
                     html.H3(
                         children=locale.format_string(
                             "As of %s, there have been %d cases in total of COVID-19 confirmed in New Zealand",
                             (df.index[-1].strftime("%d %B %Y"), df["New Zealand"].iloc[-1]), grouping=True),
-                        className="twelve columns",
-                        style={"textAlign": "center", "marginTop":"0"}),
+                        style={"flex":"1","marginTop":"0","textAlign":"center"}),
 
                 ],
             ),
 
             html.Div(
-                className="row flex-display",
-                style={"height":"75vh"},
+                className="main_row",
+
                 children=[
                     html.Div(
                         id="graph_container",
-                        className="pretty_container nine columns",
+                        className="pretty_container",
+                        style={
+                            "flex":"1 0 auto",
+                            "display":"flex",
+                            "overflow":"hidden",
+                            "minWidth":"60vw",
+                            "minHeight":"30rem"
+                        },
                         children=[
-                            dcc.Graph(id="covid_graph", className="graph", config={"displayModeBar":False})
+                            dcc.Graph(
+                                id="covid_graph",
+                                className="graph",
+                                config={
+                                    "displayModeBar":False,
+                                    "responsive":True},
+                                style={
+                                    "flex":"1 1 auto",
+                                },
+                            )
                         ]
                     ),
                     html.Div(
-                        className="pretty_container three columns",
+                        className="pretty_container control_container",
                         style={
+                            "flex":"1 1 auto",
                             "display":"flex",
                             "flexFlow":"column",
-                            "minHeight":"60vh"
 
                         },
                         children=[
@@ -141,6 +156,7 @@ def createLayout():
                             ),
                             dcc.Dropdown(
                                 id="countries",
+                                className="dcc_control",
                                 style={
                                     "flex":"1",
                                     "overflow":"auto"
@@ -151,7 +167,6 @@ def createLayout():
                                 } for i in df.columns]
                                 ,
                                 multi=True,
-                                className="dcc_control"
                             ),
 
                         ]
@@ -159,9 +174,9 @@ def createLayout():
                 ]
             ),
             html.Div(
-                className="row flex-display",
+                className="flex-display",
                 children=[
-                    dcc.Markdown(children=dataSourceText, className="twelve columns", style={"textAlign": "center","margin":"2rem"}),
+                    dcc.Markdown(children=dataSourceText, style={"textAlign": "center","margin":"2rem", "flex":"1"}),
 
                 ]
             ),
@@ -181,8 +196,7 @@ def update_header(value, children):
     if value is None or len(value)==0:
         return html.H3(
             children="None Selected",
-            className="twelve columns",
-            style={"textAlign": "center", "marginTop": "0"}
+            style={"flex":"1","marginTop":"0","textAlign":"center"}
         ),
     else:
         country = value[0]
@@ -193,8 +207,7 @@ def update_header(value, children):
                          df[country].dropna().iloc[-1],
                          country),
                         grouping=True),
-                    className="twelve columns",
-                    style={"textAlign": "center", "marginTop":"0"}
+                    style={"flex":"1","marginTop":"0","textAlign":"center"}
         ),
 
 
@@ -217,38 +230,41 @@ def select_all(all_n_clicks,none_n_clicks, options):
             return []
 
 
-
 @app.callback(
     Output("graph_container","children"),
     [Input("countries","value")],
     [State("graph_container","children")]
 )
-def update_gc_children(f,c):
-    time.sleep(.0001)
-    return c
+def update_gc_children(v,c):
+    if len(v) ==2:
+        time.sleep(.0001)
+        return c
+    else:
+        return dash.no_update
 
 @app.callback(
     Output("covid_graph","figure"),
-    [Input("data_store", "children"),
-     Input("countries","value")]
+    [Input("countries","value")],
+    [State("data_store","children")]
 )
-def update_graph(children, value):
+def update_graph(value, children):
     df = pd.read_json(children[0])
     dfText = pd.read_json(children[1])
     countryList=[]
     if value is not None and len(value)>0 :
         countryList = value
+
+
+    newData = [dict(
+                x=df.index,
+                y=df[i],
+                name=i,
+                text= dfText[i].dropna() if len(countryList)>1 else "",
+                mode="lines+text",
+                textposition="top left"
+            ) for i in df[countryList].columns]
     return {
-                'data': [
-                    dict(
-                        x=df.index,
-                        y=df[i],
-                        name=i,
-                        text= dfText[i].dropna() if len(countryList)>1 else "",
-                        mode="lines+text",
-                        textposition="top left"
-                    ) for i in df[countryList].columns
-                ],
+                'data': newData,
                 'layout': dict(
                     xaxis={'title': 'Time'},
                     yaxis={'title': 'Confirmed cases',
