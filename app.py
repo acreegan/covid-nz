@@ -47,7 +47,7 @@ def getData():
         if soup.find("table", class_="table-style-two").find_all("tr")[3].find("th").string == 'Number of confirmed and probable cases':
             numCases = np.int64(locale.atoi(soup.find("table", class_="table-style-two").find_all("tr")[3].find_all("td")[0].string))
             dateString = soup.find("p", class_="georgia-italic").string
-            mohDate = pd.to_datetime(datetime.strptime(dateString, "Last updated %h:%mm, %d %B %Y.").replace(hour=0, minute=0, second=0, microsecond=0))
+            mohDate = pd.to_datetime(datetime.strptime(dateString, "Last updated %I:%M %p, %d %B %Y.").replace(hour=0, minute=0, second=0, microsecond=0))
             if mohDate>df.index[-1]:
                 latest = pd.DataFrame(columns=df.columns, index=[mohDate])
                 latest["New Zealand"].iloc[-1] = numCases
