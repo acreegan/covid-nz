@@ -1,7 +1,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output, State, ClientsideFunction
 import pandas as pd
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
@@ -16,12 +16,17 @@ pd.set_option('display.width', 1000)
 
 
 
-johnsURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
+johnsURLTotal = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
+johnsURLDeaths = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
+johnsURLRecovered = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"
 mohURL = "https://www.health.govt.nz/our-work/diseases-and-conditions/covid-19-novel-coronavirus/covid-19-current-situation/covid-19-current-cases"
 
 app = dash.Dash(
-    __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"}]
+    __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"}],
+    suppress_callback_exceptions=True
 )
+
+
 app.title = "COVID-19 Cases NZ"
 
 server = app.server
@@ -31,12 +36,27 @@ server = app.server
 def getData():
     # Get Johns Hopkins Data
     try:
-        df = pd.read_csv(johnsURL)
+        df = pd.read_csv(johnsURLTotal)
         df = df.T
         df.columns = df.loc["Country/Region"].values
         df = df.drop(df.index[0:4])
         df = df.groupby(df.columns,axis=1).sum()
         df.index = pd.to_datetime(df.index)
+
+        dfDeaths = pd.read_csv(johnsURLDeaths)
+        dfDeaths = dfDeaths.T
+        dfDeaths.columns = dfDeaths.loc["Country/Region"].values
+        dfDeaths = dfDeaths.drop(dfDeaths.index[0:4])
+        dfDeaths = dfDeaths.groupby(dfDeaths.columns, axis=1).sum()
+        dfDeaths.index = pd.to_datetime(dfDeaths.index)
+
+        dfRecovered = pd.read_csv(johnsURLRecovered)
+        dfRecovered = dfRecovered.T
+        dfRecovered.columns = dfRecovered.loc["Country/Region"].values
+        dfRecovered = dfRecovered.drop(dfRecovered.index[0:4])
+        dfRecovered = dfRecovered.groupby(dfRecovered.columns,axis=1).sum()
+        dfRecovered.index = pd.to_datetime(dfRecovered.index)
+
     except Exception as e:
         print("Error getting data from Johns Hopkins Github:", e)
 
@@ -67,24 +87,27 @@ def getData():
     dfText.loc[dfText.index[-2],nacols] =nacols
     dfText.loc[dfText.index[:-2], nacols] = ""
 
+    dfIncreaseInTotal = df - df.shift()
 
-    return df,dfText
+    return df,dfText,dfIncreaseInTotal
 
 dataSourceText = "Data sources: [Johns Hopkins](https://github.com/CSSEGISandData/COVID-19), " \
                  "[NZ Ministry of Health](https://www.health.govt.nz/our-work/diseases-and-conditions/" \
-                 "covid-19-novel-coronavirus/covid-19-current-situation/covid-19-current-cases)"
-
+                 "covid-19-novel-coronavirus/covid-19-current-situation/covid-19-current-cases)"\
+                 "   |   Site source code: [GitHub](https://github.com/acreegan/covid-nz)"
 
 
 
 def createLayout():
-    df,dfText = getData()
+    df,dfText, dfIncreaseInTotal = getData()
 
     return html.Div(
         id="mainContainer",
         className="mainContainer",
         children=[
-            html.Div(id='data_store', style={'display': 'none'}, children=[df.to_json(),dfText.to_json()]),
+            html.Div(id='data_store', style={'display': 'none'}, children=[df.to_json(),dfText.to_json(),dfIncreaseInTotal.to_json()]),
+            # empty Div to trigger javascript file for graph resizing
+            html.Div(id="output-clientside"),
 
             html.Div(
                 id="header",
@@ -99,80 +122,37 @@ def createLayout():
                 ],
             ),
 
+            dcc.Tabs(
+                id='tab_selector',
+                value='tab-1',
+                style={
+                    "width":"calc(100% - 20px)",
+                    "boxSizing":"border-box",
+                    "marginBottom":"0",
+                    "marginLeft":"auto",
+                    "marginRight":"auto",
+                    "backgroundColor":"#f9f9f9",
+                    "display":"flex",
+                    "flexFlow":"row nowrap"
+
+                },
+                children=[
+                    dcc.Tab(label='Total cases over time', value='tab-1', selected_style={"backgroundColor":"#f9f9f9"}),
+                    dcc.Tab(label='Daily increase in total', value='tab-2',selected_style={"backgroundColor":"#f9f9f9"})]
+            ),
             html.Div(
-                className="main_row",
+                id="main_row",
+                className="main_row pretty_container",
+                style={
+                    "marginTop": "0"
+                },
 
                 children=[
-                    html.Div(
-                        id="graph_container",
-                        className="pretty_container",
-                        style={
-                            "flex":"1 0 auto",
-                            "display":"flex",
-                            "overflow":"hidden",
-                            "minWidth":"60vw",
-                            "minHeight":"30rem"
-                        },
-                        children=[
-                            dcc.Graph(
-                                id="covid_graph",
-                                className="graph",
-                                config={
-                                    "displayModeBar":False,
-                                    "responsive":True},
-                                style={
-                                    "flex":"1 1 auto",
-                                },
-                            )
-                        ]
-                    ),
-                    html.Div(
-                        className="pretty_container control_container",
-                        style={
-                            "flex":"1 1 auto",
-                            "display":"flex",
-                            "flexFlow":"column",
 
-                        },
-                        children=[
-                            html.P("Select Countries", className="control_label"),
-                            html.Div(
-                                style={
-                                    "display":"flex",
-                                    "flexFlow":"row wrap",
-                                    "justifyContent":"center",
-                                    "alignItems":"center"
-                                },
-                                children=[
-                                    html.Button("Select All",
-                                                id="select_all",
-                                                style={"flex":"1","margin":".5rem"}
-                                                ),
-                                    html.Button("Select None",
-                                                id="select_none",
-                                                style={"flex":"1","margin":".5rem"}
-                                                ),
-                                ]
-                            ),
-                            dcc.Dropdown(
-                                id="countries",
-                                className="dcc_control",
-                                style={
-                                    "flex":"1",
-                                    "overflow":"auto"
-                                },
-                                options=[{
-                                    "label": i,
-                                    "value": i
-                                } for i in df.columns]
-                                ,
-                                multi=True,
-                            ),
-
-                        ]
-                    ),
                 ]
             ),
+
+
             html.Div(
                 className="flex-display",
                 children=[
@@ -185,12 +165,174 @@ def createLayout():
 
 app.layout = createLayout
 
+@app.callback(Output('main_row', 'children'),
+              [Input('tab_selector', 'value')],
+              [State("data_store","children")])
+def render_content(tab,children):
+    df = pd.read_json(children[0])
+    if tab=="tab-1":
+        return \
+            [ html.Div(
+                    id="graph_container",
+                    # className="pretty_container",
+                    style={
+                        "flex": "1 0 auto",
+                        "display": "flex",
+                        "overflow": "hidden",
+                        "minWidth": "60vw",
+                        "minHeight": "30rem"
+                    },
+                    children=[
+                        dcc.Graph(
+                            id="covid_graph",
+                            className="graph",
+                            config={
+                                "displayModeBar": False,
+                                "responsive": True},
+                            style={
+                                "flex": "1 1 auto",
+                            },
+                        )
+                    ]
+                ),
+            html.Div(
+                className="separator",
+                style={
+                    "width": "2px",
+                    "height": "90%",
+                    "margin": "10px",
+                    "flex": "0 0 auto",
+                    "background": "lightgrey",
+                    "marginTop": "auto",
+                    "marginBottom": "auto",
+                }
+            ),
+            html.Div(
+                className="control_container",
+                style={
+                    "flex": "1 1 auto",
+                    "display": "flex",
+                    "flexFlow": "column",
+
+                },
+                children=[
+                    html.P("Select Countries", className="control_label"),
+                    html.Div(
+                        style={
+                            "display": "flex",
+                            "flexFlow": "row wrap",
+                            "justifyContent": "center",
+                            "alignItems": "center"
+                        },
+                        children=[
+                            html.Button("Select All",
+                                        id="select_all",
+                                        style={"flex": "1", "margin": ".5rem"}
+                                        ),
+                            html.Button("Select None",
+                                        id="select_none",
+                                        style={"flex": "1", "margin": ".5rem"}
+                                        ),
+                        ]
+                    ),
+                    dcc.Dropdown(
+                        id="countries",
+                        className="dcc_control",
+                        value=["New Zealand"],
+                        persistence_type="memory",
+                        persistence=True,
+                        style={
+                            "flex": "1",
+                            "overflow": "auto"
+                        },
+                        options=[{
+                            "label": i,
+                            "value": i
+                        } for i in df.columns]
+                        ,
+                        multi=True,
+                    ),
+
+                ]
+            ),]
+
+    elif tab=="tab-2":
+        return \
+            [html.Div(
+                id="graph_container2",
+                # className="pretty_container",
+                style={
+                    "flex": "1 0 auto",
+                    "display": "flex",
+                    "overflow": "hidden",
+                    "minWidth": "60vw",
+                    "minHeight": "30rem"
+                },
+                children=[
+                    dcc.Graph(
+                        id="covid_graph2",
+                        className="graph",
+                        config={
+                            "displayModeBar": False,
+                            "responsive": True},
+                        style={
+                            "flex": "1 1 auto",
+                        },
+                    )
+                ]
+            ),
+                html.Div(
+                    className="separator",
+                    style={
+                        "width": "2px",
+                        "height": "90%",
+                        "margin": "10px",
+                        "flex": "0 0 auto",
+                        "background": "lightgrey",
+                        "marginTop": "auto",
+                        "marginBottom": "auto",
+                    }
+                ),
+                html.Div(
+                    className="control_container",
+                    style={
+                        "flex": "1 1 auto",
+                        "display": "flex",
+                        "flexFlow": "column",
+
+                    },
+                    children=[
+                        html.P("Select Country", className="control_label"),
+                        dcc.Dropdown(
+                            id="countries2",
+                            className="dcc_control",
+                            value="New Zealand",
+                            persistence_type="memory",
+                            persistence=True,
+                            style={
+                                "flex": "1",
+                                "overflow": "auto"
+                            },
+                            options=[{
+                                "label": i,
+                                "value": i
+                            } for i in df.columns]
+                            ,
+                            multi=False,
+                        ),
+
+                    ]
+                ), ]
+
+
 @app.callback(
     Output("header","children"),
-    [Input("countries","value")],
+    [Input("countries","value"),
+     ],
     [State("data_store","children")]
 )
-def update_header(value, children):
+def update_header(value,children):
+
     df = pd.read_json(children[0])
 
     if value is None or len(value)==0:
@@ -217,7 +359,7 @@ def update_header(value, children):
      Input("select_none","n_clicks")],
     [State("countries","options")]
 )
-def select_all(all_n_clicks,none_n_clicks, options):
+def update_dropdown(all_n_clicks, none_n_clicks, options):
     ctx = dash.callback_context
 
     if ctx.triggered[0]["value"] is None:
@@ -230,12 +372,18 @@ def select_all(all_n_clicks,none_n_clicks, options):
             return []
 
 
+
+
 @app.callback(
     Output("graph_container","children"),
     [Input("countries","value")],
     [State("graph_container","children")]
 )
 def update_gc_children(v,c):
+
+    if v is None:
+        return dash.no_update
+
     if len(v) ==2:
         time.sleep(.0001)
         return c
@@ -271,7 +419,7 @@ def update_graph(value, children):
                            "type" : "linear"},
                     margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
                     hovermode='closest',
-                    title="Confirmed cases of COVID-19<br> over time",
+                    title="Total cases of COVID-19<br> over time",
                     showlegend=False,
                 )
             }
@@ -279,6 +427,49 @@ def update_graph(value, children):
 
 
 
+@app.callback(
+    Output("covid_graph2","figure"),
+    [Input("countries2","value")],
+    [State("data_store","children")]
+)
+def update_graph2(value, children):
+    dfIncrease = pd.read_json(children[2])
+    dfText = pd.read_json(children[1])
+    country=""
+    if value is not None and len(value)>0 :
+        country = value
+
+
+    newData = [dict(
+                x=dfIncrease.index,
+                y=dfIncrease[country],
+                name=country,
+                # text= dfText[i].dropna() if len(countryList)>1 else "",
+                # mode="lines+text",
+                type="bar",
+                textposition="top left"
+            ) ]
+    return {
+                'data': newData,
+                'layout': dict(
+                    xaxis={'title': 'Time'},
+                    yaxis={'title': 'Confirmed cases',
+                           "type" : "linear"
+                           },
+                    margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+                    hovermode='closest',
+                    title="Increase in total number of<br> confirmed cases of COVID-19<br> over time",
+                    showlegend=False,
+                )
+            }
+
+
+
+app.clientside_callback(
+    ClientsideFunction(namespace="clientside", function_name="autocomplete_off"),
+    Output("output-clientside", "children"),
+    [Input('tab_selector', 'value')],
+)
 
 if __name__ == '__main__':
     # app.run_server(debug=True)
