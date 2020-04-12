@@ -21,10 +21,10 @@ if (!window.dash_clientside) {
 window.dash_clientside.clientside = {
   autocomplete_off: function(value) {
     if (value == "tab-1"){
-        setTimeout(func,500,"countries")
+        setTimeout(func,3000,"countries")
     }
     else{
-        setTimeout(func,500,"countries2")
+        setTimeout(func,3000,"countries2")
     }
 
     return null;
