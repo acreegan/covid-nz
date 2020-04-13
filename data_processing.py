@@ -4,6 +4,9 @@ import numpy as np
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 import locale
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
 
 johnsURLTotal = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 johnsURLDeaths = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
@@ -66,5 +69,6 @@ def getData():
     dfText.loc[dfText.index[:-2], nacols] = ""
 
     dfNew = df - df.shift()
+
 
     return df,dfText,dfNew

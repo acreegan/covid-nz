@@ -20,11 +20,14 @@ if (!window.dash_clientside) {
 }
 window.dash_clientside.clientside = {
   autocomplete_off: function(value) {
-    if (value == "tab-1"){
-        setTimeout(allDescendantsAutocompleteOffWithId,3000,"countries")
+    if (value == "tab_1"){
+        setTimeout(allDescendantsAutocompleteOffWithId,3000,"dropdown_tab_1")
     }
-    else{
-        setTimeout(allDescendantsAutocompleteOffWithId,3000,"countries2")
+    else if (value == "tab_2"){
+        setTimeout(allDescendantsAutocompleteOffWithId,3000,"dropdown_tab_2")
+    }
+    else if (value == "tab_3"){
+        setTimeout(allDescendantsAutocompleteOffWithId,3000,"dropdown_tab_3")
     }
 
     return null;
