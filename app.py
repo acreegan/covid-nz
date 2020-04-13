@@ -473,7 +473,7 @@ app.clientside_callback(
 
 if __name__ == '__main__':
     # app.run_server(debug=True)
-    app.run_server(debug=True, port=8085, host="192.168.1.64")
+    app.run_server(debug=True, port=8085, host="0.0.0.0")
 
 
 
