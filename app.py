@@ -447,7 +447,7 @@ def update_graph_tab_3(value, children):
                 x=df[i].loc[df.index[df[i]>50]],
                 y=dfNew[i].rolling(pd.to_timedelta("7days")).sum().loc[df.index[df[i]>50]],
                 name=i,
-                text= dfText[i].dropna() if len(countryList)>1 else "",
+                text= dfText[i].dropna().loc[df.index[df[i]>50]] if len(countryList)>1 else "",
                 mode="lines+text",
                 textposition="top left"
             ) for i in df[countryList].columns]
