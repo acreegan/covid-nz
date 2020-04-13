@@ -56,13 +56,27 @@ body {
     align-items: center;
 }
 
-.tabs{
+.tab_container{
     width: calc(100% - 20px);
     box-sizing: border-box;
-    margin-bottom: 0;
+    margin-bottom: -5px;
     margin-left: auto;
     margin-right: auto;
-    background-color: #f9f9f9;
+    background-color: #f2f2f2;
+    border-radius: 5px;
+}
+
+.tab{
+    background-color: #f2f2f2 !important;
+    border-radius: 5px 5px 0px 0px;
+    border-width: 0px !important;
+    padding: 10px 5px 15px 5px !important;
+    font-size: 0.75em;
+}
+
+.tab--selected{
+   background-color: #f9f9f9 !important;
+   box-shadow: 2px 2px 2px lightgrey !important;
 }
 
 .main_row{
@@ -97,6 +111,10 @@ body {
 
 /* For devices larger than 550px */
 @media (min-width: 550px) {
+
+    .tab{
+        font-size: 1em;
+    }
     .separator{
         display:unset
     }

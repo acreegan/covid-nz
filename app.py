@@ -71,13 +71,13 @@ def createLayout():
             dcc.Tabs(
                 id='tab_selector',
                 value='tab_1',
-                className="tabs",
+                className="tab_container",
                 # Style needs to be here not in style.css or it doesn't work
                 style={"display":"flex","flexFlow":"row nowrap"},
                 children=[
-                    dcc.Tab(label='Total cases over time', value='tab_1', selected_style={"backgroundColor":"#f9f9f9"}),
-                    dcc.Tab(label='New cases over time', value='tab_2',selected_style={"backgroundColor":"#f9f9f9"}),
-                    dcc.Tab(label='New cases vs total cases', value='tab_3',selected_style={"backgroundColor":"#f9f9f9"})]
+                    dcc.Tab(label='Total cases over time', value='tab_1', className="tab", selected_className="tab--selected"),
+                    dcc.Tab(label='New cases over time', value='tab_2',className="tab", selected_className="tab--selected"),
+                    dcc.Tab(label='New cases vs total cases', value='tab_3',className="tab", selected_className="tab--selected")]
             ),
             html.Div(
                 id="main_row",
