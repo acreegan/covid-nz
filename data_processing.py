@@ -69,6 +69,7 @@ def getData():
     dfText.loc[dfText.index[:-2], nacols] = ""
 
     dfNew = df - df.shift()
+    dfDeathsNew = dfDeaths - dfDeaths.shift()
 
 
-    return df,dfText,dfNew,dfDeaths
+    return df,dfText,dfNew,dfDeaths,dfDeathsNew

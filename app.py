@@ -53,18 +53,25 @@ tab_ids = dict(
         select_all="select_all_tab_4",
         select_none="select_none_tab_4",
         dropdown="dropdown_tab_4",
+    ),
+    tab_5 = dict(
+        graph_container="graph_container_tab_5",
+        graph="graph_tab_5",
+        select_all="select_all_tab_5",
+        select_none="select_none_tab_5",
+        dropdown="dropdown_tab_5",
     )
 )
 
 
 def createLayout():
-    df,dfText, dfNew, dfDeaths = data_processing.getData()
+    df,dfText, dfNew, dfDeaths, dfDeathsNew = data_processing.getData()
 
     return html.Div(
         id="mainContainer",
         className="mainContainer",
         children=[
-            html.Div(id='data_store', style={'display': 'none'}, children=[df.to_json(),dfText.to_json(),dfNew.to_json(),dfDeaths.to_json()]),
+            html.Div(id='data_store', style={'display': 'none'}, children=[df.to_json(),dfText.to_json(),dfNew.to_json(),dfDeaths.to_json(),dfDeathsNew.to_json()]),
             # empty Div to trigger javascript file for graph resizing
             html.Div(id="output-clientside"),
 
@@ -85,7 +92,8 @@ def createLayout():
                     dcc.Tab(label='Total cases over time', value='tab_1', className="tab", selected_className="tab--selected"),
                     dcc.Tab(label='New cases over time', value='tab_2',className="tab", selected_className="tab--selected"),
                     dcc.Tab(label='New cases vs total cases', value='tab_3',className="tab", selected_className="tab--selected"),
-                    dcc.Tab(label='Total deaths over time', value='tab_4',className="tab", selected_className="tab--selected")]
+                    dcc.Tab(label='Total deaths over time', value='tab_4',className="tab", selected_className="tab--selected"),
+                    dcc.Tab(label='New deaths over time', value='tab_5',className="tab", selected_className="tab--selected")]
             ),
             html.Div(
                 id="main_row",
@@ -266,7 +274,7 @@ def create_tab_content(tab_value,children):
 
                 ]
             )]
-    elif tab_value=='tab_4':
+    elif tab_value=='tab_4' or tab_value=='tab_5':
         return [
             html.Div(
                 id=id_dict['graph_container'],
@@ -401,6 +409,24 @@ def update_dropdown_tab_4(all_n_clicks, none_n_clicks, options):
         else :
             return []
 
+@app.callback(
+    Output(tab_ids['tab_5']['dropdown'],"value"),
+    [Input(tab_ids['tab_5']["select_all"],"n_clicks"),
+     Input(tab_ids['tab_5']["select_none"],"n_clicks")],
+    [State(tab_ids['tab_5']['dropdown'],"options")]
+)
+def update_dropdown_tab_5(all_n_clicks, none_n_clicks, options):
+    ctx = dash.callback_context
+
+    if ctx.triggered[0]["value"] is None:
+        return ["New Zealand"]
+
+    else:
+        if ctx.triggered[0]["prop_id"] == tab_ids['tab_5']["select_all"] + ".n_clicks":
+            return list(i.get("value") for i in options)
+        else :
+            return []
+
 
 
 
@@ -444,6 +470,23 @@ def force_redraw_graph_tab_3(v,c):
     [State(tab_ids['tab_4']['graph_container'],"children")]
 )
 def force_redraw_graph_tab_4(v,c):
+
+    if v is None:
+        return dash.no_update
+
+    if len(v) ==2:
+        time.sleep(.0001)
+        return c
+    else:
+        return dash.no_update
+
+
+@app.callback(
+    Output(tab_ids['tab_5']['graph_container'],"children"),
+    [Input(tab_ids['tab_5']['dropdown'],"value")],
+    [State(tab_ids['tab_5']['graph_container'],"children")]
+)
+def force_redraw_graph_tab_5(v,c):
 
     if v is None:
         return dash.no_update
@@ -592,6 +635,40 @@ def update_graph_tab_4(value, children):
                     margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
                     hovermode='closest',
                     title="Total deaths from COVID-19<br> over time",
+                    showlegend=False,
+                )
+            }
+
+@app.callback(
+    Output(tab_ids['tab_5']['graph'],"figure"),
+    [Input(tab_ids['tab_5']['dropdown'],"value")],
+    [State("data_store","children")]
+)
+def update_graph_tab_5(value, children):
+    dfDeaths = pd.read_json(children[4])
+    dfText = pd.read_json(children[1])
+    countryList=[]
+    if value is not None and len(value)>0 :
+        countryList = value
+
+
+    newData = [dict(
+                x=dfDeaths.index,
+                y=dfDeaths[i],
+                name=i,
+                text= dfText[i].dropna() if len(countryList)>1 else "",
+                mode="lines+text",
+                textposition="top left"
+            ) for i in dfDeaths[countryList].columns]
+    return {
+                'data': newData,
+                'layout': dict(
+                    xaxis={'title': 'Time'},
+                    yaxis={'title': 'New confirmed deaths',
+                           "type" : "linear"},
+                    margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+                    hovermode='closest',
+                    title="New deaths from COVID-19<br> over time",
                     showlegend=False,
                 )
             }
