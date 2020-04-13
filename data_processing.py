@@ -71,4 +71,4 @@ def getData():
     dfNew = df - df.shift()
 
 
-    return df,dfText,dfNew
+    return df,dfText,dfNew,dfDeaths
