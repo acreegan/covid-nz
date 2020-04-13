@@ -19,12 +19,103 @@ body {
   display: flex;
 }
 
+
 #header {
   align-items: center;
 }
 
-.dcc_control {
+.dropdown{
+  margin: 0;
+  padding: 5px;
+}
+.dcc_control{
   margin: 0;
   padding: 5px;
   width: calc(100%-40px);
+  flex: 1 0 auto;
+  overflow: auto;
+}
+.graph{
+    margin: 0 0;
+    padding: 0 1px;
+    flex: 1 1 auto;
+}
+
+.graph_container{
+    flex: 1 0 auto;
+    display: flex;
+    overflow: hidden;
+    min-width: 60vw;
+    min-height: 30rem;
+}
+
+.button_container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.tabs{
+    width: calc(100% - 20px);
+    box-sizing: border-box;
+    margin-bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #f9f9f9;
+}
+
+.main_row{
+    flex:1;
+    display:flex;
+    flex-flow:row wrap;
+}
+
+#mainContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.control_container{
+    height:90vh;
+    flex: 1 1 auto;
+    display: flex;
+    flex-flow: column
+}
+
+.separator{
+    display:none;
+    width: 2px;
+    height: 90%;
+    margin: 10px;
+    flex: 0 0 auto;
+    background: lightgrey;
+    margin-top: auto;
+    margin-bottom: auto;
+
+}
+
+/* For devices larger than 550px */
+@media (min-width: 550px) {
+    .separator{
+        display:unset
+    }
+
+
+    .main_row{
+        flex:1;
+        display:flex;
+        flex-flow:row nowrap;
+        overflow:hidden;
+    }
+
+    #mainContainer {
+      display: flex;
+      flex-direction: column;
+      height:96vh;
+    }
+
+    .control_container{
+        height:unset
+    }
 }

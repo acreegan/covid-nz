@@ -10,7 +10,7 @@ function allDescendantsAutocompleteOff (node) {
 }
 
 
-function func(id)
+function allDescendantsAutocompleteOffWithId(id)
 {
     allDescendantsAutocompleteOff(document.getElementById(id))
 }
@@ -21,10 +21,10 @@ if (!window.dash_clientside) {
 window.dash_clientside.clientside = {
   autocomplete_off: function(value) {
     if (value == "tab-1"){
-        setTimeout(func,3000,"countries")
+        setTimeout(allDescendantsAutocompleteOffWithId,3000,"countries")
     }
     else{
-        setTimeout(func,3000,"countries2")
+        setTimeout(allDescendantsAutocompleteOffWithId,3000,"countries2")
     }
 
     return null;
@@ -33,7 +33,7 @@ window.dash_clientside.clientside = {
 
 
 // Run on load (need func so get element doesn't get evaluated until after timeout)
-setTimeout(func,5000,"countries")
+setTimeout(allDescendantsAutocompleteOffWithId,5000,"countries")
 
 
 
