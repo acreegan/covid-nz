@@ -1,6 +1,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_daq as daq
 from dash.dependencies import Input, Output, State, ClientsideFunction
 import pandas as pd
 import locale
@@ -34,6 +35,7 @@ tab_ids = dict(
         select_all="select_all_tab_1",
         select_none="select_none_tab_1",
         dropdown="dropdown_tab_1",
+        toggle_view="toggle_view_tab_1",
     ),
     tab_2=dict(
         graph_container="graph_container_tab_2",
@@ -178,6 +180,19 @@ def create_tab_content(tab_value):
                                 "label": i,
                                 "value": i
                             } for i in df.columns],
+                    ),
+                    html.P("Graph Options"),
+                    html.Div(
+                        className="",
+                        children=[
+                            daq.ToggleSwitch(label={ 'label' : "Log view", 'style' : { 'margin' : 15  } },
+                                        id=tab_ids[tab_value]['toggle_view'],
+                                        labelPosition='right',
+                                        size=30,
+                                        style={ "display": "inline-flex"},
+                                        value=False
+                                        ),
+                        ],
                     ),
 
                 ]
@@ -415,15 +430,22 @@ def update_dropdown_tab_4(all_n_clicks, none_n_clicks, options):
 
 @app.callback(
     Output(tab_ids['tab_1']['graph'],"figure"),
-    [Input(tab_ids['tab_1']['dropdown'],"value")]
+    [Input(tab_ids['tab_1']['dropdown'],"value"),
+     Input(tab_ids['tab_1']["toggle_view"],"value")],
 )
-def update_graph_tab_1(value):
-    global df, dfText
+def update_graph_tab_1(value, toggle_value):
+    ctx = dash.callback_context
 
+    global df, dfText
     countryList=[]
     if value is not None and len(value)>0 :
         countryList = value
 
+    
+    if toggle_value :
+        graphType = 'log'
+    else :
+        graphType = 'linear'
 
     newData = [dict(
                 x=df.index,
@@ -438,7 +460,7 @@ def update_graph_tab_1(value):
                 'layout': dict(
                     xaxis={'title': 'Time'},
                     yaxis={'title': 'Confirmed cases',
-                           "type" : "linear"},
+                           "type" : graphType },
                     margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
                     hovermode='closest',
                     title="Total cases of COVID-19<br> over time",
