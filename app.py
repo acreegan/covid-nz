@@ -399,61 +399,8 @@ def update_dropdown_tab_4(all_n_clicks, none_n_clicks, options):
     else:
         if ctx.triggered[0]["prop_id"] == tab_ids['tab_4']["select_all"] + ".n_clicks":
             return list(i.get("value") for i in options)
-        else :
+        else:
             return []
-
-
-
-
-# @app.callback(
-#     Output(tab_ids['tab_1']['graph_container'],"children"),
-#     [Input(tab_ids['tab_1']['dropdown'],"value")],
-#     [State(tab_ids['tab_1']['graph_container'],"children")]
-# )
-# def force_redraw_graph_tab_1(v,c):
-#
-#     if v is None:
-#         return dash.no_update
-#
-#     if len(v) ==2:
-#         time.sleep(1)
-#         return c
-#     else:
-#         return dash.no_update
-
-#
-# @app.callback(
-#     Output(tab_ids['tab_3']['graph_container'],"children"),
-#     [Input(tab_ids['tab_3']['dropdown'],"value")],
-#     [State(tab_ids['tab_3']['graph_container'],"children")]
-# )
-# def force_redraw_graph_tab_3(v,c):
-#
-#     if v is None:
-#         return dash.no_update
-#
-#     if len(v) ==2:
-#         time.sleep(.0001)
-#         return c
-#     else:
-#         return dash.no_update
-
-
-@app.callback(
-    Output(tab_ids['tab_4']['graph_container'],"children"),
-    [Input(tab_ids['tab_4']['dropdown'],"value")],
-    [State(tab_ids['tab_4']['graph_container'],"children")]
-)
-def force_redraw_graph_tab_4(v,c):
-
-    if v is None:
-        return dash.no_update
-
-    if len(v) ==2:
-        time.sleep(.0001)
-        return c
-    else:
-        return dash.no_update
 
 
 @app.callback(
@@ -472,7 +419,6 @@ def update_graph_tab_1(value):
                 x=df.index,
                 y=df[i],
                 name=i,
-                # text= dfText[i].dropna() if len(countryList)>1 else "",
                 text=dfText[i].dropna(),
                 mode="lines+text",
                 textposition="top left"
@@ -543,7 +489,6 @@ def update_graph_tab_3(value):
                 x=df[i].loc[df.index[df[i]>50]],
                 y=dfNew[i].rolling(pd.to_timedelta("7days")).sum().loc[df.index[df[i]>50]],
                 name=i,
-                # text= dfText[i].dropna().loc[df.index[df[i]>50]] if len(countryList)>1 else "",
                 text=dfText[i].dropna().loc[df.index[df[i] > 50]],
                 mode="lines+text",
                 textposition="top left"
@@ -564,12 +509,11 @@ def update_graph_tab_3(value):
 
 @app.callback(
     Output(tab_ids['tab_4']['graph'],"figure"),
-    [Input(tab_ids['tab_4']['dropdown'],"value")],
-    [State("data_store","children")]
+    [Input(tab_ids['tab_4']['dropdown'],"value")]
 )
-def update_graph_tab_4(value, children):
-    dfDeaths = pd.read_json(children[3])
-    dfText = pd.read_json(children[1])
+def update_graph_tab_4(value):
+    global dfDeaths, dfText
+
     countryList=[]
     if value is not None and len(value)>0 :
         countryList = value
@@ -579,7 +523,7 @@ def update_graph_tab_4(value, children):
                 x=dfDeaths.index,
                 y=dfDeaths[i],
                 name=i,
-                text= dfText[i].dropna() if len(countryList)>1 else "",
+                text= dfText[i].dropna(),
                 mode="lines+text",
                 textposition="top left"
             ) for i in dfDeaths[countryList].columns]
@@ -603,7 +547,6 @@ app.clientside_callback(
 )
 
 if __name__ == '__main__':
-    # app.run_server(debug=True)
     app.run_server(debug=True, port=8085, host="0.0.0.0")
 
 
