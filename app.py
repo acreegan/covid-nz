@@ -49,15 +49,19 @@ tab_ids = dict(
     )
 )
 
+df = pd.DataFrame()
+dfText = pd.DataFrame()
+dfNew = pd.DataFrame()
+
 
 def createLayout():
-    df,dfText, dfNew = data_processing.getData()
+    global df,dfText, dfNew
+    df, dfText, dfNew = data_processing.getData()
 
     return html.Div(
         id="mainContainer",
         className="mainContainer",
         children=[
-            html.Div(id='data_store', style={'display': 'none'}, children=[df.to_json(),dfText.to_json(),dfNew.to_json()]),
             # empty Div to trigger javascript file for graph resizing
             html.Div(id="output-clientside"),
 
@@ -101,10 +105,9 @@ app.layout = createLayout
 
 
 @app.callback(Output('main_row', 'children'),
-              [Input('tab_selector', 'value')],
-              [State("data_store","children")])
-def create_tab_content(tab_value,children):
-    df = pd.read_json(children[0])
+              [Input('tab_selector', 'value')])
+def create_tab_content(tab_value):
+    global df
     id_dict = tab_ids[tab_value]
     if tab_value=='tab_1':
         return [
@@ -262,12 +265,10 @@ def create_tab_content(tab_value,children):
 
 @app.callback(
     Output("header","children"),
-    [Input(tab_ids['tab_1']['dropdown'],"value")],
-    [State("data_store","children")]
+    [Input(tab_ids['tab_1']['dropdown'],"value")]
 )
-def update_header(value,children):
-
-    df = pd.read_json(children[0])
+def update_header(value):
+    global df
 
     if value is None or len(value)==0:
         return "None Selected"
@@ -324,48 +325,47 @@ def update_dropdown_tab_3(all_n_clicks, none_n_clicks, options):
 
 
 
-@app.callback(
-    Output(tab_ids['tab_1']['graph_container'],"children"),
-    [Input(tab_ids['tab_1']['dropdown'],"value")],
-    [State(tab_ids['tab_1']['graph_container'],"children")]
-)
-def force_redraw_graph_tab_1(v,c):
+# @app.callback(
+#     Output(tab_ids['tab_1']['graph_container'],"children"),
+#     [Input(tab_ids['tab_1']['dropdown'],"value")],
+#     [State(tab_ids['tab_1']['graph_container'],"children")]
+# )
+# def force_redraw_graph_tab_1(v,c):
+#
+#     if v is None:
+#         return dash.no_update
+#
+#     if len(v) ==2:
+#         time.sleep(1)
+#         return c
+#     else:
+#         return dash.no_update
 
-    if v is None:
-        return dash.no_update
-
-    if len(v) ==2:
-        time.sleep(.0001)
-        return c
-    else:
-        return dash.no_update
-
-
-@app.callback(
-    Output(tab_ids['tab_3']['graph_container'],"children"),
-    [Input(tab_ids['tab_3']['dropdown'],"value")],
-    [State(tab_ids['tab_3']['graph_container'],"children")]
-)
-def force_redraw_graph_tab_3(v,c):
-
-    if v is None:
-        return dash.no_update
-
-    if len(v) ==2:
-        time.sleep(.0001)
-        return c
-    else:
-        return dash.no_update
+#
+# @app.callback(
+#     Output(tab_ids['tab_3']['graph_container'],"children"),
+#     [Input(tab_ids['tab_3']['dropdown'],"value")],
+#     [State(tab_ids['tab_3']['graph_container'],"children")]
+# )
+# def force_redraw_graph_tab_3(v,c):
+#
+#     if v is None:
+#         return dash.no_update
+#
+#     if len(v) ==2:
+#         time.sleep(.0001)
+#         return c
+#     else:
+#         return dash.no_update
 
 
 @app.callback(
     Output(tab_ids['tab_1']['graph'],"figure"),
-    [Input(tab_ids['tab_1']['dropdown'],"value")],
-    [State("data_store","children")]
+    [Input(tab_ids['tab_1']['dropdown'],"value")]
 )
-def update_graph_tab_1(value, children):
-    df = pd.read_json(children[0])
-    dfText = pd.read_json(children[1])
+def update_graph_tab_1(value):
+    global df, dfText
+
     countryList=[]
     if value is not None and len(value)>0 :
         countryList = value
@@ -375,7 +375,8 @@ def update_graph_tab_1(value, children):
                 x=df.index,
                 y=df[i],
                 name=i,
-                text= dfText[i].dropna() if len(countryList)>1 else "",
+                # text= dfText[i].dropna() if len(countryList)>1 else "",
+                text=dfText[i].dropna(),
                 mode="lines+text",
                 textposition="top left"
             ) for i in df[countryList].columns]
@@ -397,11 +398,11 @@ def update_graph_tab_1(value, children):
 
 @app.callback(
     Output(tab_ids['tab_2']['graph'],"figure"),
-    [Input(tab_ids['tab_2']['dropdown'],"value")],
-    [State("data_store","children")]
+    [Input(tab_ids['tab_2']['dropdown'],"value")]
 )
-def update_graph_tab_2(value, children):
-    dfNew = pd.read_json(children[2])
+def update_graph_tab_2(value):
+    global dfNew
+
     country=""
     if value is not None and len(value)>0 :
         country = value
@@ -430,13 +431,11 @@ def update_graph_tab_2(value, children):
 
 @app.callback(
     Output(tab_ids['tab_3']['graph'],"figure"),
-    [Input(tab_ids['tab_3']['dropdown'],"value")],
-    [State("data_store","children")]
+    [Input(tab_ids['tab_3']['dropdown'],"value")]
 )
-def update_graph_tab_3(value, children):
-    df = pd.read_json(children[0])
-    dfNew = pd.read_json(children[2])
-    dfText = pd.read_json(children[1])
+def update_graph_tab_3(value):
+    global df, dfNew, dfText
+
     countryList=[]
     if value is not None and len(value)>0 :
         countryList = value
@@ -447,7 +446,8 @@ def update_graph_tab_3(value, children):
                 x=df[i].loc[df.index[df[i]>50]],
                 y=dfNew[i].rolling(pd.to_timedelta("7days")).sum().loc[df.index[df[i]>50]],
                 name=i,
-                text= dfText[i].dropna().loc[df.index[df[i]>50]] if len(countryList)>1 else "",
+                # text= dfText[i].dropna().loc[df.index[df[i]>50]] if len(countryList)>1 else "",
+                text=dfText[i].dropna().loc[df.index[df[i] > 50]],
                 mode="lines+text",
                 textposition="top left"
             ) for i in df[countryList].columns]
