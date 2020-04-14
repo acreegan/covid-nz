@@ -49,15 +49,22 @@ tab_ids = dict(
     )
 )
 
+df = pd.DataFrame()
+dfText = pd.DataFrame()
+dfNew = pd.DataFrame()
+
 
 def createLayout():
-    df,dfText, dfNew = data_processing.getData()
+    global df,dfText, dfNew
+    df, dfText, dfNew = data_processing.getData()
 
     return html.Div(
         id="mainContainer",
         className="mainContainer",
         children=[
-            html.Div(id='data_store', style={'display': 'none'}, children=[df.to_json(),dfText.to_json(),dfNew.to_json()]),
+            html.Div(id='data_store', style={'display': 'none'},
+                     # children=[df.to_json(),dfText.to_json(),dfNew.to_json()]
+                     ),
             # empty Div to trigger javascript file for graph resizing
             html.Div(id="output-clientside"),
 
@@ -104,7 +111,8 @@ app.layout = createLayout
               [Input('tab_selector', 'value')],
               [State("data_store","children")])
 def create_tab_content(tab_value,children):
-    df = pd.read_json(children[0])
+    # df = pd.read_json(children[0])
+    global df
     id_dict = tab_ids[tab_value]
     if tab_value=='tab_1':
         return [
@@ -266,8 +274,8 @@ def create_tab_content(tab_value,children):
     [State("data_store","children")]
 )
 def update_header(value,children):
-
-    df = pd.read_json(children[0])
+    global df
+    # df = pd.read_json(children[0])
 
     if value is None or len(value)==0:
         return "None Selected"
@@ -364,8 +372,9 @@ def force_redraw_graph_tab_3(v,c):
     [State("data_store","children")]
 )
 def update_graph_tab_1(value, children):
-    df = pd.read_json(children[0])
-    dfText = pd.read_json(children[1])
+    global df, dfText
+    # df = pd.read_json(children[0])
+    # dfText = pd.read_json(children[1])
     countryList=[]
     if value is not None and len(value)>0 :
         countryList = value
@@ -401,7 +410,8 @@ def update_graph_tab_1(value, children):
     [State("data_store","children")]
 )
 def update_graph_tab_2(value, children):
-    dfNew = pd.read_json(children[2])
+    global dfNew
+    # dfNew = pd.read_json(children[2])
     country=""
     if value is not None and len(value)>0 :
         country = value
@@ -434,9 +444,10 @@ def update_graph_tab_2(value, children):
     [State("data_store","children")]
 )
 def update_graph_tab_3(value, children):
-    df = pd.read_json(children[0])
-    dfNew = pd.read_json(children[2])
-    dfText = pd.read_json(children[1])
+    global df, dfNew, dfText
+    # df = pd.read_json(children[0])
+    # dfNew = pd.read_json(children[2])
+    # dfText = pd.read_json(children[1])
     countryList=[]
     if value is not None and len(value)>0 :
         countryList = value
