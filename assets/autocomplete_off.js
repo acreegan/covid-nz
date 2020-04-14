@@ -20,23 +20,14 @@ if (!window.dash_clientside) {
 }
 window.dash_clientside.clientside = {
   autocomplete_off: function(value) {
-    if (value == "tab_1"){
-        setTimeout(allDescendantsAutocompleteOffWithId,3000,"dropdown_tab_1")
-    }
-    else if (value == "tab_2"){
-        setTimeout(allDescendantsAutocompleteOffWithId,3000,"dropdown_tab_2")
-    }
-    else if (value == "tab_3"){
-        setTimeout(allDescendantsAutocompleteOffWithId,3000,"dropdown_tab_3")
-    }
-
+    setTimeout(allDescendantsAutocompleteOffWithId,3000,"dropdown_" + value)
     return null;
   }
 };
 
 
 // Run on load (need func so get element doesn't get evaluated until after timeout)
-setTimeout(allDescendantsAutocompleteOffWithId,5000,"countries")
+setTimeout(allDescendantsAutocompleteOffWithId,5000,"dropdown_tab_1")
 
 
 
