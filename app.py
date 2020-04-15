@@ -59,11 +59,11 @@ tab_ids = dict(
 df = pd.DataFrame()
 dfText = pd.DataFrame()
 dfNew = pd.DataFrame()
-
+dfDeathsText = pd.DataFrame
 
 def createLayout():
-    global df,dfText, dfNew, dfDeaths
-    df,dfText, dfNew, dfDeaths = data_processing.getData()
+    global df,dfText, dfNew, dfDeaths, dfDeathsText
+    df,dfText, dfNew, dfDeaths, dfDeathsText = data_processing.getData()
 
     return html.Div(
         id="mainContainer",
@@ -512,7 +512,7 @@ def update_graph_tab_3(value):
     [Input(tab_ids['tab_4']['dropdown'],"value")]
 )
 def update_graph_tab_4(value):
-    global dfDeaths, dfText
+    global dfDeaths, dfDeathsText
 
     countryList=[]
     if value is not None and len(value)>0 :
