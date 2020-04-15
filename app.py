@@ -569,11 +569,10 @@ def update_graph_tab_4(value):
 
 @app.callback(
     Output(tab_ids['tab_5']['graph'],"figure"),
-    [Input(tab_ids['tab_5']['dropdown'],"value")],
-    [State("data_store","children")]
+    [Input(tab_ids['tab_5']['dropdown'],"value")]
 )
-def update_graph_tab_5(value, children):
-    global dfDeaths, dfDeathsText
+def update_graph_tab_5(value):
+    global dfDeathsNew, dfDeathsText
     
     countryList=[]
     if value is not None and len(value)>0 :
@@ -581,8 +580,8 @@ def update_graph_tab_5(value, children):
 
 
     newData = [dict(
-                x=dfDeaths.index,
-                y=dfDeaths[i],
+                x=dfDeathsNew.index,
+                y=dfDeathsNew[i],
                 name=i,
                 text= dfDeathsText[i].dropna() if len(countryList)>1 else "",
                 mode="lines+text",
