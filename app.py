@@ -477,7 +477,7 @@ def update_graph_tab_2(value):
                            },
                     margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
                     hovermode='closest',
-                    title="New confirmed cases of COVID-19<br> over time",
+                    title="New cases of COVID-19<br> over time",
                     showlegend=False,
                 )
             }
