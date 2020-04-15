@@ -17,26 +17,26 @@ mohURL = "https://www.health.govt.nz/our-work/diseases-and-conditions/covid-19-n
 def getData():
     # Get Johns Hopkins Data
     try:
-        df = pd.read_csv(johnsURLTotal)
-        df = df.T
-        df.columns = df.loc["Country/Region"].values
-        df = df.drop(df.index[0:4])
-        df = df.groupby(df.columns,axis=1).sum()
-        df.index = pd.to_datetime(df.index)
+        cases = pd.read_csv(johnsURLTotal)
+        cases = cases.T
+        cases.columns = cases.loc["Country/Region"].values
+        cases = cases.drop(cases.index[0:4])
+        cases = cases.groupby(cases.columns,axis=1).sum()
+        cases.index = pd.to_datetime(cases.index)
 
-        dfDeaths = pd.read_csv(johnsURLDeaths)
-        dfDeaths = dfDeaths.T
-        dfDeaths.columns = dfDeaths.loc["Country/Region"].values
-        dfDeaths = dfDeaths.drop(dfDeaths.index[0:4])
-        dfDeaths = dfDeaths.groupby(dfDeaths.columns, axis=1).sum()
-        dfDeaths.index = pd.to_datetime(dfDeaths.index)
+        deaths = pd.read_csv(johnsURLDeaths)
+        deaths = deaths.T
+        deaths.columns = deaths.loc["Country/Region"].values
+        deaths = deaths.drop(deaths.index[0:4])
+        deaths = deaths.groupby(deaths.columns, axis=1).sum()
+        deaths.index = pd.to_datetime(deaths.index)
 
-        dfRecovered = pd.read_csv(johnsURLRecovered)
-        dfRecovered = dfRecovered.T
-        dfRecovered.columns = dfRecovered.loc["Country/Region"].values
-        dfRecovered = dfRecovered.drop(dfRecovered.index[0:4])
-        dfRecovered = dfRecovered.groupby(dfRecovered.columns,axis=1).sum()
-        dfRecovered.index = pd.to_datetime(dfRecovered.index)
+        recovered = pd.read_csv(johnsURLRecovered)
+        recovered = recovered.T
+        recovered.columns = recovered.loc["Country/Region"].values
+        recovered = recovered.drop(recovered.index[0:4])
+        recovered = recovered.groupby(recovered.columns,axis=1).sum()
+        recovered.index = pd.to_datetime(recovered.index)
 
     except Exception as e:
         print("Error getting data from Johns Hopkins Github:", e)
@@ -49,25 +49,25 @@ def getData():
             numCases = np.int64(locale.atoi(soup.find("table", class_="table-style-two").find_all("tr")[3].find_all("td")[0].string))
             dateString = soup.find("p", class_="georgia-italic").string
             mohDate = pd.to_datetime(datetime.strptime(dateString, "Last updated %I.%M %p, %d %B %Y.").replace(hour=0, minute=0, second=0, microsecond=0))
-            if mohDate>df.index[-1]:
-                latest = pd.DataFrame(columns=df.columns, index=[mohDate])
+            if mohDate>cases.index[-1]:
+                latest = pd.DataFrame(columns=cases.columns, index=[mohDate])
                 latest["New Zealand"].iloc[-1] = numCases
-                df = pd.concat([df, latest])
+                cases = pd.concat([cases, latest])
     except Exception as e:
         print("Error geting data from MOH website:", e)
 
 
     # Create text for graph. Name of country at the end, the rest blank
-    dfText = createTextForGraph(df)
+    casesText = createTextForGraph(cases)
 
     # Create text for deaths (can be different as we don't get extra data for NZ deaths yet)
-    dfDeathsText = createTextForGraph(dfDeaths)
+    deathsText = createTextForGraph(deaths)
 
     # Calculate daily new
-    dfNew = df - df.shift()
-    dfDeathsNew = dfDeaths - dfDeaths.shift()
+    casesNew = cases - cases.shift()
+    deathsNew = deaths - deaths.shift()
 
-    return df,dfText,dfNew,dfDeaths, dfDeathsText, dfDeathsNew
+    return cases,casesText,casesNew,deaths, deathsText, deathsNew
 
 
 # Create text for graph. Name of country at the end, the rest blank
