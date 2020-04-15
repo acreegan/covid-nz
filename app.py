@@ -184,7 +184,7 @@ def create_tab_content(tab_value):
             )]
 
 
-    elif tab_value=='tab_2':
+    elif tab_value=='tab_2' or tab_value=='tab_5':
         return [
             html.Div(
                 id=id_dict['graph_container'],
@@ -278,7 +278,7 @@ def create_tab_content(tab_value):
 
                 ]
             )]
-    elif tab_value=='tab_4' or tab_value=='tab_5':
+    elif tab_value=='tab_4':
         return [
             html.Div(
                 id=id_dict['graph_container'],
@@ -411,23 +411,6 @@ def update_dropdown_tab_4(all_n_clicks, none_n_clicks, options):
         else:
             return []
 
-@app.callback(
-    Output(tab_ids['tab_5']['dropdown'],"value"),
-    [Input(tab_ids['tab_5']["select_all"],"n_clicks"),
-     Input(tab_ids['tab_5']["select_none"],"n_clicks")],
-    [State(tab_ids['tab_5']['dropdown'],"options")]
-)
-def update_dropdown_tab_5(all_n_clicks, none_n_clicks, options):
-    ctx = dash.callback_context
-
-    if ctx.triggered[0]["value"] is None:
-        return ["New Zealand"]
-
-    else:
-        if ctx.triggered[0]["prop_id"] == tab_ids['tab_5']["select_all"] + ".n_clicks":
-            return list(i.get("value") for i in options)
-        else :
-            return []
 
 
 @app.callback(
@@ -572,27 +555,27 @@ def update_graph_tab_4(value):
     [Input(tab_ids['tab_5']['dropdown'],"value")]
 )
 def update_graph_tab_5(value):
-    global dfDeathsNew, dfDeathsText
-    
-    countryList=[]
+    global dfDeathsNew
+
+    country=""
     if value is not None and len(value)>0 :
-        countryList = value
+        country = value
 
 
     newData = [dict(
                 x=dfDeathsNew.index,
-                y=dfDeathsNew[i],
-                name=i,
-                text= dfDeathsText[i].dropna() if len(countryList)>1 else "",
-                mode="lines+text",
+                y=dfDeathsNew[country],
+                name=country,
+                type="bar",
                 textposition="top left"
-            ) for i in dfDeaths[countryList].columns]
+            ) ]
     return {
                 'data': newData,
                 'layout': dict(
                     xaxis={'title': 'Time'},
                     yaxis={'title': 'New confirmed deaths',
-                           "type" : "linear"},
+                           "type" : "linear"
+                           },
                     margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
                     hovermode='closest',
                     title="New deaths from COVID-19<br> over time",
