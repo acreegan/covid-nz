@@ -46,17 +46,32 @@ tab_ids = dict(
         select_all="select_all_tab_3",
         select_none="select_none_tab_3",
         dropdown="dropdown_tab_3",
+    ),
+    tab_4 = dict(
+        graph_container="graph_container_tab_4",
+        graph="graph_tab_4",
+        select_all="select_all_tab_4",
+        select_none="select_none_tab_4",
+        dropdown="dropdown_tab_4",
+    ),
+    tab_5 = dict(
+        graph_container="graph_container_tab_5",
+        graph="graph_tab_5",
+        select_all="select_all_tab_5",
+        select_none="select_none_tab_5",
+        dropdown="dropdown_tab_5",
     )
 )
 
 df = pd.DataFrame()
 dfText = pd.DataFrame()
 dfNew = pd.DataFrame()
-
+dfDeathsText = pd.DataFrame()
+dfDeathsNew = pd.DataFrame()
 
 def createLayout():
-    global df,dfText, dfNew
-    df, dfText, dfNew = data_processing.getData()
+    global df,dfText, dfNew, dfDeaths, dfDeathsText, dfDeathsNew
+    df,dfText, dfNew, dfDeaths, dfDeathsText, dfDeathsNew = data_processing.getData()
 
     return html.Div(
         id="mainContainer",
@@ -81,7 +96,9 @@ def createLayout():
                 children=[
                     dcc.Tab(label='Total cases over time', value='tab_1', className="tab", selected_className="tab--selected"),
                     dcc.Tab(label='New cases over time', value='tab_2',className="tab", selected_className="tab--selected"),
-                    dcc.Tab(label='New cases vs total cases', value='tab_3',className="tab", selected_className="tab--selected")]
+                    dcc.Tab(label='New cases vs total cases', value='tab_3',className="tab", selected_className="tab--selected"),
+                    dcc.Tab(label='Total deaths over time', value='tab_4',className="tab", selected_className="tab--selected"),
+                    dcc.Tab(label='New deaths over time', value='tab_5',className="tab", selected_className="tab--selected")]
             ),
             html.Div(
                 id="main_row",
@@ -167,7 +184,7 @@ def create_tab_content(tab_value):
             )]
 
 
-    elif tab_value=='tab_2':
+    elif tab_value=='tab_2' or tab_value=='tab_5':
         return [
             html.Div(
                 id=id_dict['graph_container'],
@@ -206,6 +223,62 @@ def create_tab_content(tab_value):
                 ]
             )]
     elif tab_value=='tab_3':
+        return [
+            html.Div(
+                id=id_dict['graph_container'],
+                className="graph_container",
+                children=[
+                    dcc.Graph(
+                        id=id_dict['graph'],
+                        className="graph",
+                        config={
+                            "displayModeBar": False,
+                            "responsive": True},
+                    )
+                ]
+            ),
+            html.Div(
+                className="separator",
+            ),
+            html.Div(
+                className="control_container",
+                children=[
+                    html.P("Select Countries"),
+                    html.Div(
+                        className="button_container",
+                        children=[
+                            html.Button("Select All",
+                                        id=tab_ids[tab_value]['select_all'],
+                                        style={"flex": "1", "margin": ".5rem"}
+                                        ),
+                            html.Button("Select None",
+                                        id=tab_ids[tab_value]['select_none'],
+                                        style={"flex": "1", "margin": ".5rem"}
+                                        ),
+                        ]
+                    ),
+                    dcc.Dropdown(
+                        id=id_dict['dropdown'],
+                        className="dropdown",
+                        value=["New Zealand"],
+                        persistence_type="memory",
+                        persistence=True,
+                        multi=True,
+                        # Style needs to be here not in style.css or it doesn't work
+                        style={
+                            "flex": "1 1 0",
+                            "overflow": "auto"
+                        },
+                        options=[
+                            {
+                                "label": i,
+                                "value": i
+                            } for i in df.columns],
+                    ),
+
+                ]
+            )]
+    elif tab_value=='tab_4':
         return [
             html.Div(
                 id=id_dict['graph_container'],
@@ -320,43 +393,24 @@ def update_dropdown_tab_3(all_n_clicks, none_n_clicks, options):
         else :
             return []
 
+@app.callback(
+    Output(tab_ids['tab_4']['dropdown'],"value"),
+    [Input(tab_ids['tab_4']["select_all"],"n_clicks"),
+     Input(tab_ids['tab_4']["select_none"],"n_clicks")],
+    [State(tab_ids['tab_4']['dropdown'],"options")]
+)
+def update_dropdown_tab_4(all_n_clicks, none_n_clicks, options):
+    ctx = dash.callback_context
 
+    if ctx.triggered[0]["value"] is None:
+        return ["New Zealand"]
 
+    else:
+        if ctx.triggered[0]["prop_id"] == tab_ids['tab_4']["select_all"] + ".n_clicks":
+            return list(i.get("value") for i in options)
+        else:
+            return []
 
-
-
-# @app.callback(
-#     Output(tab_ids['tab_1']['graph_container'],"children"),
-#     [Input(tab_ids['tab_1']['dropdown'],"value")],
-#     [State(tab_ids['tab_1']['graph_container'],"children")]
-# )
-# def force_redraw_graph_tab_1(v,c):
-#
-#     if v is None:
-#         return dash.no_update
-#
-#     if len(v) ==2:
-#         time.sleep(1)
-#         return c
-#     else:
-#         return dash.no_update
-
-#
-# @app.callback(
-#     Output(tab_ids['tab_3']['graph_container'],"children"),
-#     [Input(tab_ids['tab_3']['dropdown'],"value")],
-#     [State(tab_ids['tab_3']['graph_container'],"children")]
-# )
-# def force_redraw_graph_tab_3(v,c):
-#
-#     if v is None:
-#         return dash.no_update
-#
-#     if len(v) ==2:
-#         time.sleep(.0001)
-#         return c
-#     else:
-#         return dash.no_update
 
 
 @app.callback(
@@ -375,7 +429,6 @@ def update_graph_tab_1(value):
                 x=df.index,
                 y=df[i],
                 name=i,
-                # text= dfText[i].dropna() if len(countryList)>1 else "",
                 text=dfText[i].dropna(),
                 mode="lines+text",
                 textposition="top left"
@@ -424,7 +477,7 @@ def update_graph_tab_2(value):
                            },
                     margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
                     hovermode='closest',
-                    title="New confirmed cases of COVID-19<br> over time",
+                    title="New cases of COVID-19<br> over time",
                     showlegend=False,
                 )
             }
@@ -446,7 +499,6 @@ def update_graph_tab_3(value):
                 x=df[i].loc[df.index[df[i]>50]],
                 y=dfNew[i].rolling(pd.to_timedelta("7days")).sum().loc[df.index[df[i]>50]],
                 name=i,
-                # text= dfText[i].dropna().loc[df.index[df[i]>50]] if len(countryList)>1 else "",
                 text=dfText[i].dropna().loc[df.index[df[i] > 50]],
                 mode="lines+text",
                 textposition="top left"
@@ -465,6 +517,72 @@ def update_graph_tab_3(value):
                 )
             }
 
+@app.callback(
+    Output(tab_ids['tab_4']['graph'],"figure"),
+    [Input(tab_ids['tab_4']['dropdown'],"value")]
+)
+def update_graph_tab_4(value):
+    global dfDeaths, dfDeathsText
+
+    countryList=[]
+    if value is not None and len(value)>0 :
+        countryList = value
+
+
+    newData = [dict(
+                x=dfDeaths.index,
+                y=dfDeaths[i],
+                name=i,
+                text= dfText[i].dropna(),
+                mode="lines+text",
+                textposition="top left"
+            ) for i in dfDeaths[countryList].columns]
+    return {
+                'data': newData,
+                'layout': dict(
+                    xaxis={'title': 'Time'},
+                    yaxis={'title': 'Confirmed deaths',
+                           "type" : "linear"},
+                    margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+                    hovermode='closest',
+                    title="Total deaths from COVID-19<br> over time",
+                    showlegend=False,
+                )
+            }
+
+@app.callback(
+    Output(tab_ids['tab_5']['graph'],"figure"),
+    [Input(tab_ids['tab_5']['dropdown'],"value")]
+)
+def update_graph_tab_5(value):
+    global dfDeathsNew
+
+    country=""
+    if value is not None and len(value)>0 :
+        country = value
+
+
+    newData = [dict(
+                x=dfDeathsNew.index,
+                y=dfDeathsNew[country],
+                name=country,
+                type="bar",
+                textposition="top left"
+            ) ]
+    return {
+                'data': newData,
+                'layout': dict(
+                    xaxis={'title': 'Time'},
+                    yaxis={'title': 'New confirmed deaths',
+                           "type" : "linear"
+                           },
+                    margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+                    hovermode='closest',
+                    title="New deaths from COVID-19<br> over time",
+                    showlegend=False,
+                )
+            }
+
 app.clientside_callback(
     ClientsideFunction(namespace="clientside", function_name="autocomplete_off"),
     Output("output-clientside", "children"),
@@ -472,8 +590,7 @@ app.clientside_callback(
 )
 
 if __name__ == '__main__':
-    # app.run_server(debug=True)
-    app.run_server(debug=True, port=8085, host="192.168.1.64")
+    app.run_server(debug=True, port=8085, host="0.0.0.0")
 
 
 

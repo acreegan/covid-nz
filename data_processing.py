@@ -41,7 +41,7 @@ def getData():
     except Exception as e:
         print("Error getting data from Johns Hopkins Github:", e)
 
-    # Check Ministry of Health website for latest number
+    # Check Ministry of Health website for latest total and concat with df.
     try:
         mohHTML = urlopen(mohURL).read().decode('utf-8')
         soup = BeautifulSoup(mohHTML,'html.parser')
@@ -57,18 +57,29 @@ def getData():
         print("Error geting data from MOH website:", e)
 
 
+    # Create text for graph. Name of country at the end, the rest blank
+    dfText = createTextForGraph(df)
 
+    # Create text for deaths (can be different as we don't get extra data for NZ deaths yet)
+    dfDeathsText = createTextForGraph(dfDeaths)
+
+    # Calculate daily new
+    dfNew = df - df.shift()
+    dfDeathsNew = dfDeaths - dfDeaths.shift()
+
+    return df,dfText,dfNew,dfDeaths, dfDeathsText, dfDeathsNew
+
+
+# Create text for graph. Name of country at the end, the rest blank
+def createTextForGraph(df):
     dfText = df.copy()
     nacols = dfText.columns[dfText.iloc[-1].isna()]
     notnacols = dfText.columns[dfText.iloc[-1].notna()]
 
-    dfText.loc[dfText.index[-1],notnacols] =notnacols
+    dfText.loc[dfText.index[-1], notnacols] = notnacols
     dfText.loc[dfText.index[:-1], notnacols] = ""
 
-    dfText.loc[dfText.index[-2],nacols] =nacols
+    dfText.loc[dfText.index[-2], nacols] = nacols
     dfText.loc[dfText.index[:-2], nacols] = ""
 
-    dfNew = df - df.shift()
-
-
-    return df,dfText,dfNew
+    return dfText
