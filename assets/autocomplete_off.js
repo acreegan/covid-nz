@@ -20,14 +20,14 @@ if (!window.dash_clientside) {
 }
 window.dash_clientside.clientside = {
   autocomplete_off: function(value) {
-    setTimeout(allDescendantsAutocompleteOffWithId,3000,"dropdown_" + value)
+    setTimeout(allDescendantsAutocompleteOffWithId,3000, value + "_dropdown")
     return null;
   }
 };
 
 
 // Run on load (need func so get element doesn't get evaluated until after timeout)
-setTimeout(allDescendantsAutocompleteOffWithId,5000,"dropdown_tab_1")
+setTimeout(allDescendantsAutocompleteOffWithId,5000,"cases_dropdown")
 
 
 
