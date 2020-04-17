@@ -5,7 +5,9 @@ from dash.dependencies import Input, Output, State, ClientsideFunction
 import pandas as pd
 import locale
 import data_processing
-locale.setlocale(locale.LC_ALL, 'en_US.UTF8')
+
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
