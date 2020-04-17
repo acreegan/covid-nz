@@ -38,6 +38,8 @@ def getData():
         recovered = recovered.groupby(recovered.columns,axis=1).sum()
         recovered.index = pd.to_datetime(recovered.index)
 
+        active = cases - (deaths+recovered)
+
     except Exception as e:
         print("Error getting data from Johns Hopkins Github:", e)
 
@@ -57,17 +59,33 @@ def getData():
         print("Error geting data from MOH website:", e)
 
 
+
+    worldbank_pop = pd.read_csv("data/population_data.csv", header=4)
+    worldbank_pop = worldbank_pop.T
+    worldbank_pop.columns = worldbank_pop.loc["Country Name"].values
+    worldbank_pop.drop(worldbank_pop.index[0])
+    # notin = cases.columns.to_series().loc[~cases.columns.to_series().isin(worldbank_pop["Country Name"])]
+
+
+
     # Create text for graph. Name of country at the end, the rest blank
     casesText = createTextForGraph(cases)
 
-    # Create text for deaths (can be different as we don't get extra data for NZ deaths yet)
+    # Create text for other dataframes (can be different as we don't get extra data for NZ deaths yet)
     deathsText = createTextForGraph(deaths)
+    recoveredText = createTextForGraph(recovered)
+    activeText = createTextForGraph(active)
+
 
     # Calculate daily new
     casesNew = cases - cases.shift()
     deathsNew = deaths - deaths.shift()
+    recoveredNew = recovered - recovered.shift()
+    activeNew = active - active.shift()
 
-    return cases,casesText,casesNew,deaths, deathsText, deathsNew
+
+    return cases,casesText,casesNew,deaths, deathsText, deathsNew, \
+           recovered, recoveredText, recoveredNew, active, activeText, activeNew, worldbank_pop
 
 
 # Create text for graph. Name of country at the end, the rest blank

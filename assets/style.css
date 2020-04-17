@@ -49,6 +49,8 @@ body {
     min-height: 30rem;
 }
 
+
+
 .button_container {
     display: flex;
     flex-flow: row wrap;
@@ -111,7 +113,13 @@ body {
 
 /* For devices larger than 550px */
 @media (min-width: 550px) {
-
+    .graph_container{
+        flex: 0 0 60vw;
+        display: flex;
+        overflow: hidden;
+        width: 60vw;
+        min-height: 30rem;
+    }
     .tab{
         font-size: 1em;
     }
