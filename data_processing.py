@@ -59,14 +59,13 @@ def getData():
         print("Error geting data from MOH website:", e)
 
 
-    #TODO read population data
-    worldbank_pop = pd.read_csv("data/API_SP.POP.TOTL_DS2_en_csv_v2_936048.csv", header=2)
-    population = pd.DataFrame(columns=cases.columns,data=np.full((1,len(cases.columns)),1000000), index=[1])
+
+    worldbank_pop = pd.read_csv("data/population_data.csv", header=4)
+    worldbank_pop = worldbank_pop.T
+    worldbank_pop.columns = worldbank_pop.loc["Country Name"].values
+    worldbank_pop.drop(worldbank_pop.index[0])
     # notin = cases.columns.to_series().loc[~cases.columns.to_series().isin(worldbank_pop["Country Name"])]
-    others = pd.DataFrame({ # Data from Wikipedia 16/04/2020
-        "Country"   : ["Western Sahara", "Taiwan*", "MS Zaandam", "Holy See", "Diamond Princess"],
-        "Population": [567402,            23780452, "",           825,         ""]
-    })
+
 
 
     # Create text for graph. Name of country at the end, the rest blank
@@ -86,7 +85,7 @@ def getData():
 
 
     return cases,casesText,casesNew,deaths, deathsText, deathsNew, \
-           recovered, recoveredText, recoveredNew, active, activeText, activeNew, population
+           recovered, recoveredText, recoveredNew, active, activeText, activeNew, worldbank_pop
 
 
 # Create text for graph. Name of country at the end, the rest blank

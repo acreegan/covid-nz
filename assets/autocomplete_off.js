@@ -20,7 +20,7 @@ if (!window.dash_clientside) {
 }
 window.dash_clientside.clientside = {
   autocomplete_off: function(value) {
-    setTimeout(allDescendantsAutocompleteOffWithId,3000, value + "_dropdown")
+    setTimeout(allDescendantsAutocompleteOffWithId,1500, value + "_dropdown")
     return null;
   }
 };

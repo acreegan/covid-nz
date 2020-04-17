@@ -113,7 +113,9 @@ def create_tab_content(tab_value):
                             {'label':'Total', 'value':'total'},
                             {'label':'New', 'value':'new'},
                         ],
-                        value='total'
+                        value='total',
+                        persistence_type="memory",
+                        persistence=True,
                     ),
                     html.P(""),
                     html.P("Graph Scale: "),
@@ -122,9 +124,11 @@ def create_tab_content(tab_value):
                         options=[
                             {'label':'Linear', 'value':'linear'},
                             {'label':'Log', 'value':'log'},
-                            {'label':'Per Capita', 'value':'per_capita'},
+                            {'label':'Per 10,000 population', 'value':'per_capita'},
                         ],
-                        value='linear'
+                        value='linear',
+                        persistence_type="memory",
+                        persistence=True,
                     ),
                     html.P(""),
                     html.P("Select Countries"),
@@ -326,7 +330,81 @@ def update_dropdown_newVsTotal(all_n_clicks, none_n_clicks, options):
         return []
 
 
+@app.callback(
+    Output('cases_scale',"options"),
+    [Input('cases_new_v_total',"value")],
+    [State('cases_scale','options')]
+)
+def update_scale_options_cases(value,options):
+    if value == "new":
+        for item in options:
+            if item["value"]!="linear":
+                item["disabled"]=True
 
+        return options
+
+    else:
+        for item in options:
+            item["disabled"] = False
+
+        return options
+
+@app.callback(
+    Output('active_scale',"options"),
+    [Input('active_new_v_total',"value")],
+    [State('active_scale','options')]
+)
+def update_scale_options_active(value,options):
+    if value == "new":
+        for item in options:
+            if item["value"]!="linear":
+                item["disabled"]=True
+
+        return options
+
+    else:
+        for item in options:
+            item["disabled"] = False
+
+        return options
+
+@app.callback(
+    Output('recovered_scale',"options"),
+    [Input('recovered_new_v_total',"value")],
+    [State('recovered_scale','options')]
+)
+def update_scale_options_recovered(value,options):
+    if value == "new":
+        for item in options:
+            if item["value"]!="linear":
+                item["disabled"]=True
+
+        return options
+
+    else:
+        for item in options:
+            item["disabled"] = False
+
+        return options
+
+@app.callback(
+    Output('deaths_scale',"options"),
+    [Input('deaths_new_v_total',"value")],
+    [State('deaths_scale','options')]
+)
+def update_scale_options_deaths(value,options):
+    if value == "new":
+        for item in options:
+            if item["value"]!="linear":
+                item["disabled"]=True
+
+        return options
+
+    else:
+        for item in options:
+            item["disabled"] = False
+
+        return options
 
 
 @app.callback(
@@ -336,43 +414,251 @@ def update_dropdown_newVsTotal(all_n_clicks, none_n_clicks, options):
      Input('cases_scale',"value")]
 )
 def update_graph_cases(dropdown_value,newvtotal_value,scale_value):
+    #So we can copy paste these callbacks and only update values at top.
+    totalTitle = "Total cases of COVID-19<br> over time"
+    newTitle = "New cases of COVID-19<br> over time"
+    yLabel = "Confirmed cases"
+    perCapitaYLabel = 'Confirmed cases per 10,000 population'
+    data = cases if newvtotal_value == "total" else casesNew
+    dataText = casesText
 
     if dropdown_value is None or len(dropdown_value)==0:
         return dash.no_update
     else:
         countryList = dropdown_value
 
+    if newvtotal_value == "total":
+        graphData = [dict(
+                    x=data.index if scale_value!="log" else data.index[data[i] > 50],
+                    y=data[i] if scale_value =="linear" else data[i].loc[data.index[data[i] > 50]] if scale_value=="log" else 10000*data[i]/population.loc["Population",i],
+                    name=i,
+                    text=dataText[i].dropna() if scale_value!="log" else dataText[i].dropna().loc[data.index[data[i] > 50]],
+                    mode="lines+text",
+                    textposition="top left"
+                ) for i in data[countryList].columns]
 
-    # if newvtotal = total:
-    graphData = [dict(
-                x=cases.index,
-                y=cases[i] if scale_value =="linear" else cases[i].loc[cases.index[cases[i] > 50]] if scale_value=="log" else cases[i]/population.loc[1,i],
-                name=i,
-                text=casesText[i].dropna() if scale_value!="log" else casesText[i].dropna().loc[cases.index[cases[i] > 50]],
-                mode="lines+text",
-                textposition="top left"
-            ) for i in cases[countryList].columns]
+        layout = dict(
+                    xaxis={'title': 'Time'},
+                    yaxis={'title': yLabel if scale_value!="per_capita" else perCapitaYLabel,
+                           "type" : "linear" if scale_value!="log" else "log"},
+                    margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+                    hovermode='closest',
+                    title=totalTitle,
+                    showlegend=False,
+                )
 
-    layout = dict(
-                xaxis={'title': 'Time'},
-                yaxis={'title': 'Confirmed cases' if scale_value!="per_capita" else 'Confirmed cases per capita',
-                       "type" : "linear" if scale_value!="log" else "log"},
-                margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
-                hovermode='closest',
-                title="Total cases of COVID-19<br> over time",
-                showlegend=False,
-            )
+    else: #newvtotal_value = new
+        graphData = [dict(
+            x=data.index,
+            y=data[i],
+            name=i,
+            type="bar",
+            textposition="top left"
+        ) for i in data[countryList[0]].to_frame().columns]
+
+        layout = dict(
+            xaxis={'title': 'Time'},
+            yaxis={'title': yLabel,
+                   "type": "linear"},
+            margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+            hovermode='closest',
+            title=newTitle,
+            showlegend=False,)
+
+    return {'data': graphData,
+            'layout': layout}
+
+@app.callback(
+    Output('active_graph',"figure"),
+    [Input('active_dropdown',"value"),
+     Input('active_new_v_total',"value"),
+     Input('active_scale',"value")]
+)
+def update_graph_active(dropdown_value,newvtotal_value,scale_value):
+    #So we can copy paste these callbacks and only update values at top.
+    totalTitle = "Active cases of COVID-19<br> over time"
+    newTitle = "Change in active cases of COVID-19<br> over time"
+    yLabel = "Active cases"
+    perCapitaYLabel = 'Active cases per 10,000 population'
+    data = active if newvtotal_value == "total" else activeNew
+    dataText = activeText
+
+    if dropdown_value is None or len(dropdown_value)==0:
+        return dash.no_update
+    else:
+        countryList = dropdown_value
+
+    if newvtotal_value == "total":
+        graphData = [dict(
+                    x=data.index if scale_value!="log" else data.index[data[i] > 50],
+                    y=data[i] if scale_value =="linear" else data[i].loc[data.index[data[i] > 50]] if scale_value=="log" else 10000*data[i]/population.loc["Population",i],
+                    name=i,
+                    text=dataText[i].dropna() if scale_value!="log" else dataText[i].dropna().loc[data.index[data[i] > 50]],
+                    mode="lines+text",
+                    textposition="top left"
+                ) for i in data[countryList].columns]
+
+        layout = dict(
+                    xaxis={'title': 'Time'},
+                    yaxis={'title': yLabel if scale_value!="per_capita" else perCapitaYLabel,
+                           "type" : "linear" if scale_value!="log" else "log"},
+                    margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+                    hovermode='closest',
+                    title=totalTitle,
+                    showlegend=False,
+                )
+
+    else: #newvtotal_value = new
+        graphData = [dict(
+            x=data.index,
+            y=data[i],
+            name=i,
+            type="bar",
+            textposition="top left"
+        ) for i in data[countryList[0]].to_frame().columns]
+
+        layout = dict(
+            xaxis={'title': 'Time'},
+            yaxis={'title': yLabel,
+                   "type": "linear"},
+            margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+            hovermode='closest',
+            title=newTitle,
+            showlegend=False,)
+
+    return {'data': graphData,
+            'layout': layout}
 
 
-    # else: ....
+@app.callback(
+    Output('recovered_graph',"figure"),
+    [Input('recovered_dropdown',"value"),
+     Input('recovered_new_v_total',"value"),
+     Input('recovered_scale',"value")]
+)
+def update_graph_recovered(dropdown_value,newvtotal_value,scale_value):
+    # So we can copy paste these callbacks and only update values at top.
+    totalTitle = "Recovered cases of COVID-19<br> over time"
+    newTitle = "Change in recovered cases of COVID-19<br> over time"
+    yLabel = "Recovered cases"
+    perCapitaYLabel = 'Recovered cases per 10,000 population'
+    data = recovered if newvtotal_value == "total" else recoveredNew
+    dataText = recoveredText
+
+    if dropdown_value is None or len(dropdown_value) == 0:
+        return dash.no_update
+    else:
+        countryList = dropdown_value
+
+    if newvtotal_value == "total":
+        graphData = [dict(
+            x=data.index if scale_value != "log" else data.index[data[i] > 50],
+            y=data[i] if scale_value == "linear" else data[i].loc[
+                data.index[data[i] > 50]] if scale_value == "log" else 10000 * data[i] / population.loc[
+                "Population", i],
+            name=i,
+            text=dataText[i].dropna() if scale_value != "log" else dataText[i].dropna().loc[data.index[data[i] > 50]],
+            mode="lines+text",
+            textposition="top left"
+        ) for i in data[countryList].columns]
+
+        layout = dict(
+            xaxis={'title': 'Time'},
+            yaxis={'title': yLabel if scale_value != "per_capita" else perCapitaYLabel,
+                   "type": "linear" if scale_value != "log" else "log"},
+            margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+            hovermode='closest',
+            title=totalTitle,
+            showlegend=False,
+        )
+
+    else:  # newvtotal_value = new
+        graphData = [dict(
+            x=data.index,
+            y=data[i],
+            name=i,
+            type="bar",
+            textposition="top left"
+        ) for i in data[countryList[0]].to_frame().columns]
+
+        layout = dict(
+            xaxis={'title': 'Time'},
+            yaxis={'title': yLabel,
+                   "type": "linear"},
+            margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+            hovermode='closest',
+            title=newTitle,
+            showlegend=False, )
+
+    return {'data': graphData,
+            'layout': layout}
+
+
+@app.callback(
+    Output('deaths_graph',"figure"),
+    [Input('deaths_dropdown',"value"),
+     Input('deaths_new_v_total',"value"),
+     Input('deaths_scale',"value")]
+)
+def update_graph_deaths(dropdown_value,newvtotal_value,scale_value):
+    # So we can copy paste these callbacks and only update values at top.
+    totalTitle = "Deaths from COVID-19<br> over time"
+    newTitle = "Change in deaths from COVID-19<br> over time"
+    yLabel = "Deaths"
+    perCapitaYLabel = 'Deaths per 10,000 population'
+    data = deaths if newvtotal_value == "total" else deathsNew
+    dataText = deathsText
+
+    if dropdown_value is None or len(dropdown_value) == 0:
+        return dash.no_update
+    else:
+        countryList = dropdown_value
+
+    if newvtotal_value == "total":
+        graphData = [dict(
+            x=data.index if scale_value != "log" else data.index[data[i] > 50],
+            y=data[i] if scale_value == "linear" else data[i].loc[
+                data.index[data[i] > 50]] if scale_value == "log" else 10000 * data[i] / population.loc[
+                "Population", i],
+            name=i,
+            text=dataText[i].dropna() if scale_value != "log" else dataText[i].dropna().loc[data.index[data[i] > 50]],
+            mode="lines+text",
+            textposition="top left"
+        ) for i in data[countryList].columns]
+
+        layout = dict(
+            xaxis={'title': 'Time'},
+            yaxis={'title': yLabel if scale_value != "per_capita" else perCapitaYLabel,
+                   "type": "linear" if scale_value != "log" else "log"},
+            margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+            hovermode='closest',
+            title=totalTitle,
+            showlegend=False,
+        )
+
+    else:  # newvtotal_value = new
+        graphData = [dict(
+            x=data.index,
+            y=data[i],
+            name=i,
+            type="bar",
+            textposition="top left"
+        ) for i in data[countryList[0]].to_frame().columns]
+
+        layout = dict(
+            xaxis={'title': 'Time'},
+            yaxis={'title': yLabel,
+                   "type": "linear"},
+            margin={'l': 50, 'b': 40, 't': 40, 'r': 20},
+            hovermode='closest',
+            title=newTitle,
+            showlegend=False, )
+
+    return {'data': graphData,
+            'layout': layout}
 
 
 
-
-    return {
-                'data': graphData,
-                'layout': layout
-            }
 
 
 @app.callback(
