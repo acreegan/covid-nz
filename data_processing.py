@@ -11,34 +11,28 @@ pd.set_option('display.width', 1000)
 johnsURLTotal = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 johnsURLDeaths = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
 johnsURLRecovered = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"
+
+johnsURLTotalUS = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
+johnsURLDeathsUS = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
+
 mohURL = "https://www.health.govt.nz/our-work/diseases-and-conditions/covid-19-novel-coronavirus/covid-19-current-situation/covid-19-current-cases"
 
 
 def getData():
     # Get Johns Hopkins Data
     try:
-        cases = pd.read_csv(johnsURLTotal)
-        cases = cases.T
-        cases.columns = cases.loc["Country/Region"].values
-        cases = cases.drop(cases.index[0:4])
-        cases = cases.groupby(cases.columns,axis=1).sum()
-        cases.index = pd.to_datetime(cases.index)
+        cases = readJohnsData(johnsURLTotal, "Country/Region")
+        deaths = readJohnsData(johnsURLDeaths, "Country/Region")
+        recovered = readJohnsData(johnsURLRecovered, "Country/Region")
 
-        deaths = pd.read_csv(johnsURLDeaths)
-        deaths = deaths.T
-        deaths.columns = deaths.loc["Country/Region"].values
-        deaths = deaths.drop(deaths.index[0:4])
-        deaths = deaths.groupby(deaths.columns, axis=1).sum()
-        deaths.index = pd.to_datetime(deaths.index)
-
-        recovered = pd.read_csv(johnsURLRecovered)
-        recovered = recovered.T
-        recovered.columns = recovered.loc["Country/Region"].values
-        recovered = recovered.drop(recovered.index[0:4])
-        recovered = recovered.groupby(recovered.columns,axis=1).sum()
-        recovered.index = pd.to_datetime(recovered.index)
+        casesUS = readJohnsData(johnsURLTotalUS, "Province_State").add_suffix(", US")
+        deathsUS = readJohnsData(johnsURLDeathsUS, "Province_State").add_suffix(", US")
 
         active = cases - (deaths+recovered)
+
+        # There is no recovered data for US, therefore US data is added after calculating active so US states do not appear in active
+        cases = pd.concat([cases, casesUS],axis=1)
+        deaths = pd.concat([deaths, deathsUS], axis=1)
 
     except Exception as e:
         print("Error getting data from Johns Hopkins Github:", e)
@@ -53,25 +47,30 @@ def getData():
             mohDate = pd.to_datetime(datetime.strptime(dateString, "Last updated %I.%M %p, %d %B %Y.").replace(hour=0, minute=0, second=0, microsecond=0))
             if mohDate>cases.index[-1]:
                 latest = pd.DataFrame(columns=cases.columns, index=[mohDate])
-                latest["New Zealand"].iloc[-1] = numCases
+                latest.loc[mohDate,"New Zealand"] = numCases
                 cases = pd.concat([cases, latest])
     except Exception as e:
         print("Error geting data from MOH website:", e)
 
 
 
-    worldbank_pop = pd.read_csv("data/population_data.csv", header=4)
-    worldbank_pop = worldbank_pop.T
-    worldbank_pop.columns = worldbank_pop.loc["Country Name"].values
-    worldbank_pop.drop(worldbank_pop.index[0])
-    # notin = cases.columns.to_series().loc[~cases.columns.to_series().isin(worldbank_pop["Country Name"])]
+    population = pd.read_csv("data/population_data.csv", header=4)
+    population = population.T
+    population.columns = population.loc["Country Name"].values
+    population.drop(population.index[0])
 
+    us_pop = pd.read_csv("data/us_states_population.csv", header=1)
+    us_pop = us_pop.T
+    us_pop.columns = us_pop.loc["NAME"].values
+    us_pop.drop(us_pop.index[0])
+    us_pop = us_pop.add_suffix(", US")
+
+    population = pd.concat([population,us_pop],axis=1)
 
 
     # Create text for graph. Name of country at the end, the rest blank
+    # Also Create text for other dataframes (can be different as we don't get extra data for NZ deaths yet)
     casesText = createTextForGraph(cases)
-
-    # Create text for other dataframes (can be different as we don't get extra data for NZ deaths yet)
     deathsText = createTextForGraph(deaths)
     recoveredText = createTextForGraph(recovered)
     activeText = createTextForGraph(active)
@@ -85,7 +84,7 @@ def getData():
 
 
     return cases,casesText,casesNew,deaths, deathsText, deathsNew, \
-           recovered, recoveredText, recoveredNew, active, activeText, activeNew, worldbank_pop
+           recovered, recoveredText, recoveredNew, active, activeText, activeNew, population
 
 
 # Create text for graph. Name of country at the end, the rest blank
@@ -101,3 +100,14 @@ def createTextForGraph(df):
     dfText.loc[dfText.index[:-2], nacols] = ""
 
     return dfText
+
+
+def readJohnsData(url, grouping_column):
+    df = pd.read_csv(url)
+    df = df.T
+    df.columns = df.loc[grouping_column].values
+    df.index = pd.to_datetime(df.index, errors="coerce")
+    df = df.loc[df.index.dropna()]
+    df = df.groupby(df.columns, axis=1).sum()
+
+    return df
