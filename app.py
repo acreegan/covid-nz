@@ -5,6 +5,7 @@ from dash.dependencies import Input, Output, State, ClientsideFunction
 import pandas as pd
 import locale
 import data_processing
+import json
 
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
@@ -40,6 +41,11 @@ def createLayout():
         id="mainContainer",
         className="mainContainer",
         children=[
+            html.Div(id="header_accumulator_cases", style={"display":"none"}),
+            html.Div(id="header_accumulator_active", style={"display":"none"}),
+            html.Div(id="header_accumulator_recovered", style={"display":"none"}),
+            html.Div(id="header_accumulator_deaths", style={"display":"none"}),
+
             # empty Div to trigger javascript file for autocomplete off
             html.Div(id="output-clientside"),
 
@@ -223,23 +229,93 @@ def create_tab_content(tab_value):
             )]
 
 
+# The accumulators are a workaround to enable us to use dynamically generated elements as inputs.
+# Dash requires all inputs of a callback to exist at the time the callback is run (And only one callback to output to
+# each element). This is not possible with dynamically generated tabs, so we feed their values into the accumulators
+# to act as intermediaries
 @app.callback(
     Output("header", "children"),
-    [Input("cases_dropdown", "value")]
+    [Input("header_accumulator_cases", "children"),
+     Input("header_accumulator_active", "children"),
+     Input("header_accumulator_recovered", "children"),
+     Input("header_accumulator_deaths", "children")],
 )
-def update_header(value):
-
-    if value is None or len(value) == 0:
-        return dash.no_update
+def update_header(value_cases, value_active, value_recovered, value_deaths):
+    ctx = dash.callback_context
+    values = json.loads(ctx.triggered[0]["value"])
+    if len(values["dropdown"])>0:
+        country = values["dropdown"][0]
     else:
-        country = value[0]
-        return \
-            locale.format_string(
-                "As of %s, there have been %d cases in total of COVID-19 confirmed in %s",
+        return dash.no_update
+
+    newvtotal = values["newvtotal"]
+
+    if ctx.triggered[0]["prop_id"] == "header_accumulator_cases.children":
+        if newvtotal == "total":
+            return locale.format_string(
+                "As of %s, there have been %d cases in total of COVID-19 in %s",
                 (cases[country].dropna().index[-1].strftime("%d %B %Y"),
                  cases[country].dropna().iloc[-1],
                  country),
                 grouping=True)
+        else:
+            number = casesNew[country].dropna().iloc[-1]
+            return locale.format_string(
+                "On %s, there were %d new cases of COVID-19 in %s",
+                (cases[country].dropna().index[-1].strftime("%d %B %Y"),
+                 number,
+                 country),
+                grouping=True)
+    elif ctx.triggered[0]["prop_id"] == "header_accumulator_active.children":
+        if newvtotal == "total":
+            return locale.format_string(
+                "As of %s, there are %d active cases of COVID-19 in %s",
+                (active[country].dropna().index[-1].strftime("%d %B %Y"),
+                 active[country].dropna().iloc[-1],
+                 country),
+                grouping=True)
+        else:
+            number = activeNew[country].dropna().iloc[-1]
+            return locale.format_string(
+                "On %s, the number of active cases of COVID-19 in %s " + ("increased" if number>=0 else "decreased") + " by %d",
+                (active[country].dropna().index[-1].strftime("%d %B %Y"),
+                 country,
+                 abs(number)),
+                grouping=True)
+    elif ctx.triggered[0]["prop_id"] == "header_accumulator_recovered.children":
+        if newvtotal == "total":
+            return locale.format_string(
+                "As of %s, there are %d recovered cases of COVID-19 in %s",
+                (recovered[country].dropna().index[-1].strftime("%d %B %Y"),
+                 recovered[country].dropna().iloc[-1],
+                 country),
+                grouping=True)
+        else:
+            number = recoveredNew[country].dropna().iloc[-1]
+            return locale.format_string(
+                "On %s, there were %d new recovered cases of COVID-19 in %s",
+                (recovered[country].dropna().index[-1].strftime("%d %B %Y"),
+                 abs(number),
+                 country),
+                grouping=True)
+    elif ctx.triggered[0]["prop_id"] == "header_accumulator_deaths.children":
+        if newvtotal == "total":
+            return locale.format_string(
+                "As of %s, there have been %d deaths from COVID-19 in %s",
+                (deaths[country].dropna().index[-1].strftime("%d %B %Y"),
+                 deaths[country].dropna().iloc[-1],
+                 country),
+                grouping=True)
+        else:
+            number = deathsNew[country].dropna().iloc[-1]
+            return locale.format_string(
+                "On %s, there were %d new deaths from COVID-19 in %s ",
+                (deaths[country].dropna().index[-1].strftime("%d %B %Y"),
+                 number,
+                 country),
+                grouping=True)
+    else:
+        return dash.no_update
 
 
 @app.callback(
@@ -677,6 +753,51 @@ def update_graph_newVsTotal(value):
                     showlegend=False,
                 )
             }
+
+@app.callback(
+    Output('header_accumulator_cases', 'children'),
+    [Input('cases_dropdown', "value"),
+     Input('cases_new_v_total', "value")]
+)
+def update_header_accumulator_cases(dropdown, newvtotal):
+    return json.dumps(dict(
+        dropdown=dropdown,
+        newvtotal=newvtotal
+    ))
+
+@app.callback(
+    Output('header_accumulator_active', 'children'),
+    [Input('active_dropdown', "value"),
+     Input('active_new_v_total', "value")]
+)
+def update_header_accumulator_active(dropdown, newvtotal):
+    return json.dumps(dict(
+        dropdown=dropdown,
+        newvtotal=newvtotal
+    ))
+
+@app.callback(
+    Output('header_accumulator_deaths', 'children'),
+    [Input('deaths_dropdown', "value"),
+     Input('deaths_new_v_total', "value")]
+)
+def update_header_accumulator_deaths(dropdown, newvtotal):
+    return json.dumps(dict(
+        dropdown=dropdown,
+        newvtotal=newvtotal
+    ))
+
+@app.callback(
+    Output('header_accumulator_recovered', 'children'),
+    [Input('recovered_dropdown', "value"),
+     Input('recovered_new_v_total', "value")]
+)
+def update_header_accumulator_cases(dropdown, newvtotal):
+    return json.dumps(dict(
+        dropdown=dropdown,
+        newvtotal=newvtotal
+    ))
+
 
 
 app.clientside_callback(
