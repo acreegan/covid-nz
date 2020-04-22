@@ -86,6 +86,8 @@ app.layout = createLayout
 
 @app.callback(Output('main_row', 'children'), [Input('tab_selector', 'value')])
 def create_tab_content(tab_value):
+    dropdown_columns = cases.columns if (tab_value != "active" and tab_value != "recovered") else active.columns #Active columns are different becasuse there is no active data for US
+
     if tab_value == 'cases' or tab_value == 'active' or tab_value == 'recovered' or tab_value == 'deaths':
         return [
             html.Div(
@@ -162,7 +164,7 @@ def create_tab_content(tab_value):
                             {
                                 "label": i,
                                 "value": i
-                            } for i in cases.columns],
+                            } for i in dropdown_columns],
                     ),
 
                 ]
