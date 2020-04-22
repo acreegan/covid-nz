@@ -15,7 +15,10 @@ pd.set_option('display.width', 1000)
 
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 app = dash.Dash(
-    __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"}],
+    __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"},
+                         {"property":"og:image","content":"http://covid19-cases.nz/assets/covid-nz_snapshot.PNG"}, # og image needs absolute URL. I don't know a better way to do this
+                         {"property":"og:image:height","content":"918"},
+                         {"property":"og:image:width","content":"1880"}],
     suppress_callback_exceptions=True, external_stylesheets=external_stylesheets
 )
 app.title = "COVID-19 Cases NZ"
