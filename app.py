@@ -117,7 +117,6 @@ def create_tab_content(tab_value):
                             {'label': 'New', 'value': 'new'},
                         ],
                         value='total',
-                        persistence_type="memory",
                         persistence=True,
                     ),
                     html.P(""),
@@ -130,7 +129,6 @@ def create_tab_content(tab_value):
                             {'label': 'Per 10,000 population', 'value': 'per_capita'},
                         ],
                         value='linear',
-                        persistence_type="memory",
                         persistence=True,
                     ),
                     html.P(""),
@@ -152,7 +150,6 @@ def create_tab_content(tab_value):
                         id=tab_value + '_dropdown',
                         className="dropdown",
                         value=[default_country],  # Value is list since multi=True
-                        persistence_type="memory",
                         persistence=True,
                         multi=True,
                         # Style needs to be here not in style.css or it doesn't work
@@ -170,7 +167,7 @@ def create_tab_content(tab_value):
                 ]
             )]
 
-    elif tab_value == 'newVsTotal':  # Currently same as first case, but may diverge soon
+    elif tab_value == 'newVsTotal':
         return [
             html.Div(
                 id=tab_value + '_graph_container',
@@ -209,7 +206,6 @@ def create_tab_content(tab_value):
                         id=tab_value + '_dropdown',
                         className="dropdown",
                         value=["New Zealand"],
-                        persistence_type="memory",
                         persistence=True,
                         multi=True,
                         # Style needs to be here not in style.css or it doesn't work
