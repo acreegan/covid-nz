@@ -141,7 +141,7 @@ def create_tab_content(tab_value):
                         persistence=True,
                     ),
                     html.P(""),
-                    html.P("Select Countries"),
+                    html.P("Select Countries/States"),
                     html.Div(
                         className="button_container",
                         children=[
@@ -197,7 +197,7 @@ def create_tab_content(tab_value):
             html.Div(
                 className="control_container",
                 children=[
-                    html.P("Select Countries"),
+                    html.P("Select Countries/States"),
                     html.Div(
                         className="button_container",
                         children=[
