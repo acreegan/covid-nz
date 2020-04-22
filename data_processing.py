@@ -20,22 +20,18 @@ mohURL = "https://www.health.govt.nz/our-work/diseases-and-conditions/covid-19-n
 
 def getData():
     # Get Johns Hopkins Data
-    try:
-        cases = readJohnsData(johnsURLTotal, "Country/Region")
-        deaths = readJohnsData(johnsURLDeaths, "Country/Region")
-        recovered = readJohnsData(johnsURLRecovered, "Country/Region")
+    cases = readJohnsData(johnsURLTotal, "Country/Region", {"US":"USA"})
+    deaths = readJohnsData(johnsURLDeaths, "Country/Region", {"US":"USA"})
+    recovered = readJohnsData(johnsURLRecovered, "Country/Region", {"US":"USA"})
 
-        casesUS = readJohnsData(johnsURLTotalUS, "Province_State").add_suffix(", US")
-        deathsUS = readJohnsData(johnsURLDeathsUS, "Province_State").add_suffix(", US")
+    casesUS = readJohnsData(johnsURLTotalUS, "Province_State").add_suffix(", USA")
+    deathsUS = readJohnsData(johnsURLDeathsUS, "Province_State").add_suffix(", USA")
 
-        active = cases - (deaths+recovered)
+    active = cases - (deaths+recovered)
 
-        # There is no recovered data for US, therefore US data is added after calculating active so US states do not appear in active
-        cases = pd.concat([cases, casesUS],axis=1)
-        deaths = pd.concat([deaths, deathsUS], axis=1)
-
-    except Exception as e:
-        print("Error getting data from Johns Hopkins Github:", e)
+    # There is no recovered data for US, therefore US data is added after calculating active so US states do not appear in active
+    cases = pd.concat([cases, casesUS],axis=1)
+    deaths = pd.concat([deaths, deathsUS], axis=1)
 
     # Check Ministry of Health website for latest total and concat with df.
     try:
@@ -102,12 +98,20 @@ def createTextForGraph(df):
     return dfText
 
 
-def readJohnsData(url, grouping_column):
-    df = pd.read_csv(url)
+def readJohnsData(url, grouping_column, replacement_columns=None):
+    try:
+        df = pd.read_csv(url)
+    except Exception as e:
+        print("Error getting data from Johns Hopkins Github:", e)
+        exit(1)
+
     df = df.T
     df.columns = df.loc[grouping_column].values
     df.index = pd.to_datetime(df.index, errors="coerce")
     df = df.loc[df.index.dropna()]
     df = df.groupby(df.columns, axis=1).sum()
+
+    if replacement_columns is not None:
+        df.rename(columns=replacement_columns,inplace=True)
 
     return df
