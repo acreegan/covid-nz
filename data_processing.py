@@ -33,20 +33,23 @@ def getData():
     cases = pd.concat([cases, casesUS],axis=1)
     deaths = pd.concat([deaths, deathsUS], axis=1)
 
-    # Check Ministry of Health website for latest total and concat with df.
-    try:
-        mohHTML = urlopen(mohURL).read().decode('utf-8')
-        soup = BeautifulSoup(mohHTML,'html.parser')
-        if soup.find("table", class_="table-style-two").find_all("tr")[3].find("th").string == 'Number of confirmed and probable cases':
-            numCases = np.int64(locale.atoi(soup.find("table", class_="table-style-two").find_all("tr")[3].find_all("td")[0].string))
-            dateString = soup.find("p", class_="georgia-italic").string
-            mohDate = pd.to_datetime(datetime.strptime(dateString, "Last updated %I.%M %p, %d %B %Y.").replace(hour=0, minute=0, second=0, microsecond=0))
-            if mohDate>cases.index[-1]:
-                latest = pd.DataFrame(columns=cases.columns, index=[mohDate])
-                latest.loc[mohDate,"New Zealand"] = numCases
-                cases = pd.concat([cases, latest])
-    except Exception as e:
-        print("Error geting data from MOH website:", e)
+    #
+    #   Turning this off for now as we are running into inconsistencies due to time zones
+    #
+    # # Check Ministry of Health website for latest total and concat with df.
+    # try:
+    #     mohHTML = urlopen(mohURL).read().decode('utf-8')
+    #     soup = BeautifulSoup(mohHTML,'html.parser')
+    #     if soup.find("table", class_="table-style-two").find_all("tr")[3].find("th").string == 'Number of confirmed and probable cases':
+    #         numCases = np.int64(locale.atoi(soup.find("table", class_="table-style-two").find_all("tr")[3].find_all("td")[0].string))
+    #         dateString = soup.find("p", class_="georgia-italic").string
+    #         mohDate = pd.to_datetime(datetime.strptime(dateString, "Last updated %I.%M %p, %d %B %Y.").replace(hour=0, minute=0, second=0, microsecond=0))
+    #         if mohDate>cases.index[-1]:
+    #             latest = pd.DataFrame(columns=cases.columns, index=[mohDate])
+    #             latest.loc[mohDate,"New Zealand"] = numCases
+    #             cases = pd.concat([cases, latest])
+    # except Exception as e:
+    #     print("Error geting data from MOH website:", e)
 
 
 
