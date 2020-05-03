@@ -62,7 +62,7 @@ def getData():
     us_pop = us_pop.T
     us_pop.columns = us_pop.loc["NAME"].values
     us_pop.drop(us_pop.index[0])
-    us_pop = us_pop.add_suffix(", US")
+    us_pop = us_pop.add_suffix(", USA")
 
     population = pd.concat([population,us_pop],axis=1)
 
