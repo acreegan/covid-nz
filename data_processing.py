@@ -10,7 +10,6 @@ pd.set_option('display.width', 1000)
 
 johnsURLTotal = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 johnsURLDeaths = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
-johnsURLRecovered = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"
 
 johnsURLTotalUS = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
 johnsURLDeathsUS = "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
@@ -22,12 +21,10 @@ def getData():
     # Get Johns Hopkins Data
     cases = readJohnsData(johnsURLTotal, "Country/Region", {"US":"USA"})
     deaths = readJohnsData(johnsURLDeaths, "Country/Region", {"US":"USA"})
-    recovered = readJohnsData(johnsURLRecovered, "Country/Region", {"US":"USA"})
 
     casesUS = readJohnsData(johnsURLTotalUS, "Province_State").add_suffix(", USA")
     deathsUS = readJohnsData(johnsURLDeathsUS, "Province_State").add_suffix(", USA")
 
-    active = cases - (deaths+recovered)
 
     # There is no recovered data for US, therefore US data is added after calculating active so US states do not appear in active
     cases = pd.concat([cases, casesUS],axis=1)
@@ -71,19 +68,14 @@ def getData():
     # Also Create text for other dataframes (can be different as we don't get extra data for NZ deaths yet)
     casesText = createTextForGraph(cases)
     deathsText = createTextForGraph(deaths)
-    recoveredText = createTextForGraph(recovered)
-    activeText = createTextForGraph(active)
 
 
     # Calculate daily new
     casesNew = cases - cases.shift()
     deathsNew = deaths - deaths.shift()
-    recoveredNew = recovered - recovered.shift()
-    activeNew = active - active.shift()
 
 
-    return cases,casesText,casesNew,deaths, deathsText, deathsNew, \
-           recovered, recoveredText, recoveredNew, active, activeText, activeNew, population
+    return cases,casesText,casesNew,deaths, deathsText, deathsNew, population
 
 
 # Create text for graph. Name of country at the end, the rest blank
