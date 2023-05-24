@@ -26,15 +26,15 @@ app.title = "COVID-19 Cases NZ"
 app.index_string = '''
 <!DOCTYPE html>
 <html>
-    <head>
-        <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-163852786-1"></script>
+    <head>       
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-PV80931Z25"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
         
-          gtag('config', 'UA-163852786-1');
+          gtag('config', 'G-PV80931Z25');
         </script>
 
         {%metas%}
